@@ -11,7 +11,7 @@
 <div
   class="split full-width"
   data-side="{{ section.settings.image_side }}"
-  style="--split-height: {{ section.settings.image_height }}vh; --split-heading-color: {{ section.settings.heading_color }}; --split-btn-bg: {{ btn_bg }}; --split-btn-text: {{ btn_text }};"
+  style="--split-height: {{ section.settings.image_height }}vh; --split-heading-color: {{ section.settings.heading_color }}; --split-btn-bg: {{ btn_bg }}; --split-btn-text: {{ btn_text }}; --split-gradient-color: {{ section.settings.gradient_color }}; --split-gradient-height: {{ section.settings.gradient_height }}%; --split-btn-offset: {{ section.settings.button_offset }}%;"
 >
   <div class="split__media">
     <div class="split__image-wrap">
@@ -34,16 +34,24 @@
         {{ 'lifestyle-1' | placeholder_svg_tag: 'split__image split__image--placeholder' }}
       {% endif %}
 
+      {% if section.settings.show_gradient %}
+        <div class="split__gradient" aria-hidden="true"></div>
+      {% endif %}
+
       {% if section.settings.heading != blank %}
         <h2 class="split__heading">{{ section.settings.heading }}</h2>
       {% endif %}
-    </div>
 
-    {% if section.settings.button_label != blank %}
-      <a href="{{ section.settings.button_url }}" class="button split__button">
-        {{ section.settings.button_label }}
-      </a>
-    {% endif %}
+      {% if section.settings.button_label != blank %}
+        <a
+          href="{{ section.settings.button_url }}"
+          class="button split__button"
+          data-style="{{ section.settings.button_style }}"
+        >
+          {{ section.settings.button_label }}
+        </a>
+      {% endif %}
+    </div>
   </div>
 
   <div class="split__spacer" aria-hidden="true"></div>
@@ -64,14 +72,6 @@
     order: 1;
   }
 
-  .split__media {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1.5rem;
-    padding-bottom: 2rem;
-  }
-
   .split__image-wrap {
     position: relative;
     width: 100%;
@@ -88,9 +88,21 @@
     background-color: #e7e4dd;
   }
 
+  /* Color rising from the bottom of the image. */
+  .split__gradient {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--split-gradient-height, 45%);
+    background: linear-gradient(to top, var(--split-gradient-color, #4d4631) 0%, transparent 100%);
+    pointer-events: none;
+  }
+
   .split__heading {
     position: absolute;
     inset: 0;
+    z-index: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -102,9 +114,26 @@
     text-shadow: 0 1px 24px rgba(0, 0, 0, 0.25);
   }
 
+  /* Button overlaid on the image, centered near the bottom. */
   .split__button {
+    position: absolute;
+    left: 50%;
+    bottom: var(--split-btn-offset, 14%);
+    transform: translateX(-50%);
+    z-index: 2;
+    white-space: nowrap;
+  }
+
+  .split__button[data-style='solid'] {
     background-color: var(--split-btn-bg);
     color: var(--split-btn-text);
+    border: none;
+  }
+
+  .split__button[data-style='outline'] {
+    background-color: transparent;
+    color: var(--split-btn-text);
+    border: 1px solid var(--split-btn-text);
   }
 
   /* On small screens the empty white column collapses and the image stacks full-width. */
@@ -170,6 +199,32 @@
     },
     {
       "type": "header",
+      "content": "Bottom gradient"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_gradient",
+      "label": "Show color from bottom of image",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "gradient_color",
+      "label": "Gradient color",
+      "default": "#4d4631"
+    },
+    {
+      "type": "range",
+      "id": "gradient_height",
+      "min": 10,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "label": "Gradient height",
+      "default": 45
+    },
+    {
+      "type": "header",
       "content": "Button"
     },
     {
@@ -184,14 +239,34 @@
       "label": "Button link"
     },
     {
+      "type": "select",
+      "id": "button_style",
+      "label": "Button style",
+      "options": [
+        { "value": "outline", "label": "Outline" },
+        { "value": "solid", "label": "Solid" }
+      ],
+      "default": "outline"
+    },
+    {
+      "type": "range",
+      "id": "button_offset",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "%",
+      "label": "Button position from bottom",
+      "default": 14
+    },
+    {
       "type": "color",
       "id": "button_background_color",
-      "label": "Button background (optional)"
+      "label": "Button background (solid style)"
     },
     {
       "type": "color",
       "id": "button_text_color",
-      "label": "Button text (optional)"
+      "label": "Button text / border"
     }
   ],
   "presets": [
