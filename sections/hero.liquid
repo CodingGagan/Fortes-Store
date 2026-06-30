@@ -1,33 +1,30 @@
-{%- liquid
-  assign bg = section.settings.background_color
--%}
 <div
   class="hero full-width"
-  style="--hero-bg: {{ bg }}; --hero-text: {{ section.settings.text_color }};"
+  style="--hero-height: {{ section.settings.image_height }}vh; --hero-text: {{ section.settings.text_color }};"
 >
-  <div class="hero__content">
+  {% if section.settings.image != blank %}
+    {{
+      section.settings.image
+      | image_url: width: 2400
+      | image_tag: widths: '800, 1200, 1600, 2000, 2400', class: 'hero__image', alt: section.settings.heading
+    }}
+  {% elsif section.settings.image_asset != blank %}
+    <img
+      src="{{ section.settings.image_asset | asset_url }}"
+      class="hero__image"
+      alt="{{ section.settings.heading | escape }}"
+      width="{{ section.settings.image_asset_width | default: 1920 }}"
+      height="{{ section.settings.image_asset_height | default: 1280 }}"
+    >
+  {% else %}
+    <div class="hero__image hero__image--placeholder">
+      {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+    </div>
+  {% endif %}
+
+  <div class="hero__overlay" data-align="{{ section.settings.content_position }}">
     {% if section.settings.heading != blank %}
       <h1 class="hero__heading">{{ section.settings.heading }}</h1>
-    {% endif %}
-
-    {% if section.settings.image != blank %}
-      {{
-        section.settings.image
-        | image_url: width: 1600
-        | image_tag: widths: '400, 600, 800, 1200, 1600', class: 'hero__image', alt: section.settings.heading
-      }}
-    {% elsif section.settings.image_asset != blank %}
-      <img
-        src="{{ section.settings.image_asset | asset_url }}"
-        class="hero__image"
-        alt="{{ section.settings.heading | escape }}"
-        width="{{ section.settings.image_asset_width | default: 1920 }}"
-        height="{{ section.settings.image_asset_height | default: 1280 }}"
-      >
-    {% else %}
-      <div class="hero__image hero__image--placeholder">
-        {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
-      </div>
     {% endif %}
 
     {% if section.settings.button_label != blank %}
@@ -40,36 +37,56 @@
 
 {% stylesheet %}
   .hero {
-    background-color: var(--hero-bg, #eef0ec);
-    color: var(--hero-text, inherit);
-    display: grid;
-    grid-template-columns: var(--content-grid);
-    padding: 4rem 0 5rem;
-  }
-
-  .hero__content {
-    grid-column: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 2rem;
-  }
-
-  .hero__heading {
-    font-size: clamp(3rem, 9vw, 7rem);
-    margin: 0;
+    position: relative;
+    height: var(--hero-height, 90vh);
+    color: var(--hero-text, #ffffff);
   }
 
   .hero__image {
-    max-width: 540px;
+    position: absolute;
+    inset: 0;
     width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .hero__image--placeholder {
+    background-color: #e7e4dd;
   }
 
   .hero__image--placeholder svg {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover;
     opacity: 0.5;
+  }
+
+  .hero__overlay {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    padding: 3rem 1.5rem;
+    text-align: center;
+  }
+
+  .hero__overlay[data-align='top'] {
+    justify-content: flex-start;
+  }
+  .hero__overlay[data-align='center'] {
+    justify-content: center;
+  }
+  .hero__overlay[data-align='bottom'] {
+    justify-content: flex-end;
+  }
+
+  .hero__heading {
+    margin: 0;
+    font-size: clamp(3rem, 9vw, 7rem);
+    text-shadow: 0 1px 24px rgba(0, 0, 0, 0.3);
   }
 {% endstylesheet %}
 
@@ -95,6 +112,33 @@
       "info": "Filename of an image in assets/ (e.g. hero-main.jpg). Used when no image is picked above."
     },
     {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "select",
+      "id": "content_position",
+      "label": "Content position",
+      "options": [
+        { "value": "top", "label": "Top" },
+        { "value": "center", "label": "Center" },
+        { "value": "bottom", "label": "Bottom" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "image_height",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "label": "Section height",
+      "default": 90
+    },
+    {
       "type": "text",
       "id": "button_label",
       "label": "Button label",
@@ -104,18 +148,6 @@
       "type": "url",
       "id": "button_url",
       "label": "Button link"
-    },
-    {
-      "type": "color",
-      "id": "background_color",
-      "label": "Background",
-      "default": "#eef0ec"
-    },
-    {
-      "type": "color",
-      "id": "text_color",
-      "label": "Heading color",
-      "default": "#3f6f4e"
     }
   ],
   "presets": [
