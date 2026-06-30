@@ -9,12 +9,42 @@
  */
 {
   "sections": {
-    "main": {
-      "type": "hello-world",
-      "settings": {}
+    "hero": {
+      "type": "hero",
+      "settings": {
+        "heading": "Stripes!",
+        "button_label": "New in Shop"
+      }
+    },
+    "feature-1": {
+      "type": "feature-split",
+      "settings": {
+        "heading": "New at Home",
+        "image_side": "left",
+        "button_label": "March Towel"
+      }
+    },
+    "banner": {
+      "type": "feature-banner",
+      "settings": {
+        "heading": "Plain. Simple.",
+        "content_position": "top",
+        "button_label": "The March Tee"
+      }
+    },
+    "feature-2": {
+      "type": "feature-split",
+      "settings": {
+        "heading": "Familiar.",
+        "image_side": "right",
+        "button_label": "March Shirt"
+      }
     }
   },
   "order": [
-    "main"
+    "hero",
+    "feature-1",
+    "banner",
+    "feature-2"
   ]
 }

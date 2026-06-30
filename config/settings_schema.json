@@ -19,6 +19,12 @@
         "id": "type_primary_font",
         "default": "work_sans_n4",
         "label": "t:general.primary"
+      },
+      {
+        "type": "font_picker",
+        "id": "type_heading_font",
+        "default": "eb_garamond_n4",
+        "label": "Headings"
       }
     ]
   },
@@ -67,6 +73,18 @@
         "id": "foreground_color",
         "default": "#333333",
         "label": "t:labels.foreground"
+      },
+      {
+        "type": "color",
+        "id": "button_background_color",
+        "default": "#3f6f4e",
+        "label": "Button background"
+      },
+      {
+        "type": "color",
+        "id": "button_text_color",
+        "default": "#ffffff",
+        "label": "Button text"
       },
       {
         "type": "range",

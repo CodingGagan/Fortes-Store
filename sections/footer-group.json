@@ -13,10 +13,22 @@
   "sections": {
     "footer": {
       "type": "footer",
-      "settings": {
-        "menu": "",
-        "show_payment_icons": true
-      }
+      "blocks": {
+        "menu-1": {
+          "type": "menu",
+          "settings": {
+            "heading": "Company"
+          }
+        },
+        "menu-2": {
+          "type": "menu",
+          "settings": {
+            "heading": "Support"
+          }
+        }
+      },
+      "block_order": ["menu-1", "menu-2"],
+      "settings": {}
     }
   },
   "order": [

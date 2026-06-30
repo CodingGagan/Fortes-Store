@@ -1,59 +1,119 @@
-<header>
-  <h2 class="header__title">
-    {{ shop.name | link_to: routes.root_url }}
-  </h2>
+<header class="header full-width">
+  <div class="header__inner">
+    <nav class="header__menu" aria-label="Primary">
+      {% for link in section.settings.menu.links %}
+        <a href="{{ link.url }}">{{ link.title }}</a>
+      {% endfor %}
+    </nav>
 
-  <div class="header__menu">
-    {% for link in section.settings.menu.links %}
-      {{ link.title | link_to: link.url }}
-    {% endfor %}
-  </div>
+    <a href="{{ routes.root_url }}" class="header__logo">
+      {% if section.settings.logo != blank %}
+        {{
+          section.settings.logo
+          | image_url: width: 600
+          | image_tag: widths: '150, 300, 450, 600', alt: shop.name, class: 'header__logo-image'
+        }}
+      {% else %}
+        <span class="header__wordmark">{{ shop.name }}</span>
+      {% endif %}
+    </a>
 
-  <div class="header__icons">
-    {% if shop.customer_accounts_enabled %}
-      <shopify-account menu="{{ section.settings.customer_account_menu }}">
-        {{ 'icon-account.svg' | inline_asset_content }}
-      </shopify-account>
-    {% endif %}
-
-    <a href="{{ routes.cart_url }}">
-      {% if cart.item_count > 0 %}
-        <sup>{{ cart.item_count }}</sup>
+    <div class="header__icons">
+      {% if shop.customer_accounts_enabled %}
+        <shopify-account menu="{{ section.settings.customer_account_menu }}">
+          {{ 'icon-account.svg' | inline_asset_content }}
+        </shopify-account>
       {% endif %}
 
-      {{ 'icon-cart.svg' | inline_asset_content }}
-    </a>
+      <a href="{{ routes.cart_url }}" class="header__cart" aria-label="Cart">
+        {% if cart.item_count > 0 %}
+          <sup>{{ cart.item_count }}</sup>
+        {% endif %}
+        {{ 'icon-cart.svg' | inline_asset_content }}
+      </a>
+    </div>
   </div>
 </header>
 
 {% stylesheet %}
-  header {
-    height: 5rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+  .header {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   }
-  header a {
-    position: relative;
+
+  .header__inner {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    height: 4.5rem;
+    padding: 0 var(--page-margin);
+  }
+
+  .header__menu {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .header__menu a {
+    color: var(--color-foreground);
+    text-decoration: none;
+    font-size: 0.85rem;
+  }
+
+  .header__logo {
+    justify-self: center;
     text-decoration: none;
     color: var(--color-foreground);
+  }
+
+  .header__wordmark {
+    font-family: var(--font-heading--family);
+    font-size: 1.5rem;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    padding-left: 0.35em;
+  }
+
+  .header__logo-image {
+    max-height: 2rem;
+    width: auto;
+  }
+
+  .header__icons {
+    justify-self: end;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 1rem;
   }
-  header a sup {
+
+  .header__icons a,
+  .header__icons shopify-account {
+    position: relative;
+    color: var(--color-foreground);
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .header__icons svg {
+    width: 1.4rem;
+    height: auto;
+  }
+
+  .header__cart sup {
     position: absolute;
     left: 100%;
-    overflow: hidden;
-    max-width: var(--page-margin);
+    top: -0.25rem;
+    font-size: 0.7rem;
   }
-  header svg {
-    width: 2rem;
-  }
-  header .header__menu,
-  header .header__icons {
-    display: flex;
-    gap: 1rem;
+
+  @media (max-width: 749px) {
+    .header__menu {
+      gap: 1rem;
+      font-size: 0.8rem;
+    }
+    .header__wordmark {
+      font-size: 1.2rem;
+      letter-spacing: 0.25em;
+    }
   }
 {% endstylesheet %}
 
@@ -61,6 +121,11 @@
 {
   "name": "t:general.header",
   "settings": [
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo image"
+    },
     {
       "type": "link_list",
       "id": "menu",
