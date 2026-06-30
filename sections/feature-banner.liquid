@@ -9,7 +9,14 @@
       | image_tag: widths: '800, 1200, 1600, 2000, 2400', class: 'banner__image', alt: section.settings.heading
     }}
   {% elsif section.settings.image_asset != blank %}
-    {{ section.settings.image_asset | asset_url | image_tag: class: 'banner__image', alt: section.settings.heading }}
+    <img
+      src="{{ section.settings.image_asset | asset_url }}"
+      class="banner__image"
+      alt="{{ section.settings.heading | escape }}"
+      width="{{ section.settings.image_asset_width | default: 1920 }}"
+      height="{{ section.settings.image_asset_height | default: 1280 }}"
+      loading="lazy"
+    >
   {% else %}
     {{ 'lifestyle-2' | placeholder_svg_tag: 'banner__image banner__image--placeholder' }}
   {% endif %}

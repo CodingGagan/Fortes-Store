@@ -17,7 +17,13 @@
         | image_tag: widths: '400, 600, 800, 1200, 1600', class: 'hero__image', alt: section.settings.heading
       }}
     {% elsif section.settings.image_asset != blank %}
-      {{ section.settings.image_asset | asset_url | image_tag: class: 'hero__image', alt: section.settings.heading }}
+      <img
+        src="{{ section.settings.image_asset | asset_url }}"
+        class="hero__image"
+        alt="{{ section.settings.heading | escape }}"
+        width="{{ section.settings.image_asset_width | default: 1920 }}"
+        height="{{ section.settings.image_asset_height | default: 1280 }}"
+      >
     {% else %}
       <div class="hero__image hero__image--placeholder">
         {{ 'product-1' | placeholder_svg_tag: 'placeholder-svg' }}
