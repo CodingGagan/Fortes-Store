@@ -8,6 +8,8 @@
       | image_url: width: 2400
       | image_tag: widths: '800, 1200, 1600, 2000, 2400', class: 'banner__image', alt: section.settings.heading
     }}
+  {% elsif section.settings.image_asset != blank %}
+    {{ section.settings.image_asset | asset_url | image_tag: class: 'banner__image', alt: section.settings.heading }}
   {% else %}
     {{ 'lifestyle-2' | placeholder_svg_tag: 'banner__image banner__image--placeholder' }}
   {% endif %}
@@ -85,6 +87,12 @@
       "type": "image_picker",
       "id": "image",
       "label": "Background image"
+    },
+    {
+      "type": "text",
+      "id": "image_asset",
+      "label": "Image asset filename (fallback)",
+      "info": "Filename of an image in assets/ (e.g. hero-main.jpg). Used when no image is picked above."
     },
     {
       "type": "text",

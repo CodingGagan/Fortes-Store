@@ -13,38 +13,62 @@
       "type": "hero",
       "settings": {
         "heading": "Stripes!",
+        "image_asset": "hero-main.jpg",
         "button_label": "New in Shop"
       }
     },
     "feature-1": {
       "type": "feature-split",
       "settings": {
+        "image_asset": "feature-9012.jpg",
         "heading": "New at Home",
         "image_side": "left",
-        "button_label": "March Towel"
-      }
-    },
-    "banner": {
-      "type": "feature-banner",
-      "settings": {
-        "heading": "Plain. Simple.",
-        "content_position": "top",
-        "button_label": "The March Tee"
+        "button_label": "Shop now"
       }
     },
     "feature-2": {
       "type": "feature-split",
       "settings": {
+        "image_asset": "feature-9006.jpg",
+        "heading": "India's Secret",
+        "image_side": "left",
+        "button_label": "Shop now"
+      }
+    },
+    "banner": {
+      "type": "feature-banner",
+      "settings": {
+        "image_asset": "hero-main.jpg",
+        "heading": "Plain. Simple.",
+        "content_position": "top",
+        "button_label": "The March Tee"
+      }
+    },
+    "feature-3": {
+      "type": "feature-split",
+      "settings": {
+        "image_asset": "feature-9012.jpg",
         "heading": "Familiar.",
-        "image_side": "right",
-        "button_label": "March Shirt"
+        "image_side": "left",
+        "button_label": "Shop now"
+      }
+    },
+    "feature-4": {
+      "type": "feature-split",
+      "settings": {
+        "image_asset": "feature-9006.jpg",
+        "heading": "Multiple lengths.",
+        "image_side": "left",
+        "button_label": "Shop now"
       }
     }
   },
   "order": [
     "hero",
     "feature-1",
+    "feature-2",
     "banner",
-    "feature-2"
+    "feature-3",
+    "feature-4"
   ]
 }
