@@ -28,9 +28,13 @@
       </a>
 
       {% if shop.customer_accounts_enabled %}
-        <shopify-account menu="{{ section.settings.customer_account_menu }}">
+        <a
+          href="{% if customer %}{{ routes.account_url }}{% else %}{{ routes.account_login_url }}{% endif %}"
+          class="header__account"
+          aria-label="{% if customer %}Account{% else %}Log in{% endif %}"
+        >
           {{ 'icon-account.svg' | inline_asset_content }}
-        </shopify-account>
+        </a>
       {% endif %}
 
       <a href="{{ routes.cart_url }}" class="header__cart" aria-label="Cart">
@@ -118,7 +122,7 @@
     font-size: 0.95rem;
   }
 
-  .header__right shopify-account,
+  .header__right .header__account,
   .header__cart {
     position: relative;
     color: var(--color-foreground);

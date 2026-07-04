@@ -1,0 +1,65 @@
+<div class="customer">
+  {%- comment -%} ---------- Recover password (shown via #recover) ---------- {%- endcomment -%}
+  <div id="recover" class="customer__block">
+    <h1 class="customer__title">Reset your password</h1>
+    <p class="customer__subtitle">We'll send you an email to reset it.</p>
+
+    {% form 'recover_customer_password' %}
+      {% if form.posted_successfully? %}
+        <p class="customer__success">We've sent you an email with a link to update your password.</p>
+      {% endif %}
+
+      {% if form.errors %}
+        <ul class="customer__errors">
+          {% for field in form.errors %}
+            <li>{{ form.errors.messages[field] }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <div class="customer__form">
+        <div class="customer__field">
+          <label for="recover-email">Email</label>
+          <input type="email" name="email" id="recover-email" autocomplete="email" required>
+        </div>
+        <button type="submit" class="button customer__button">Send reset link</button>
+      </div>
+    {% endform %}
+
+    <p class="customer__meta"><a href="#login" class="customer__link">Back to login</a></p>
+  </div>
+
+  {%- comment -%} ---------- Login ---------- {%- endcomment -%}
+  <div id="login" class="customer__block">
+    <h1 class="customer__title">Login</h1>
+    <p class="customer__subtitle">Welcome back. Sign in to your account.</p>
+
+    {% form 'customer_login' %}
+      {% if form.errors %}
+        <ul class="customer__errors">
+          {% for field in form.errors %}
+            <li>{{ form.errors.translated_fields[field] | capitalize }}: {{ form.errors.messages[field] }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <div class="customer__form">
+        <div class="customer__field">
+          <label for="login-email">Email</label>
+          <input type="email" name="customer[email]" id="login-email" autocomplete="email" required>
+        </div>
+        <div class="customer__field">
+          <label for="login-password">Password</label>
+          <input type="password" name="customer[password]" id="login-password" autocomplete="current-password" required>
+        </div>
+        <button type="submit" class="button customer__button">Sign in</button>
+      </div>
+    {% endform %}
+
+    <a href="#recover" class="customer__forgot">Forgot your password?</a>
+
+    <p class="customer__meta">
+      New to {{ shop.name }}? <a href="{{ routes.account_register_url }}" class="customer__link">Create an account</a>
+    </p>
+  </div>
+</div>

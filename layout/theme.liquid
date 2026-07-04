@@ -28,6 +28,11 @@
     {% # Load and preload the critical CSS %}
     {{ 'critical.css' | asset_url | stylesheet_tag: preload: true }}
 
+    {% # Account pages styles (only on customer templates) %}
+    {% if request.page_type contains 'customers/' %}
+      {{ 'customer.css' | asset_url | stylesheet_tag }}
+    {% endif %}
+
     {% # Social, title, etc. %}
     {% render 'meta-tags' %}
 

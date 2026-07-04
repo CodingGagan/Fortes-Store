@@ -1,0 +1,87 @@
+<div class="customer customer--wide">
+  <div class="customer__welcome">
+    <h1 class="customer__title">
+      {% if customer.first_name != blank %}Hello, {{ customer.first_name }}{% else %}My account{% endif %}
+    </h1>
+    <a href="{{ routes.account_logout_url }}" class="customer__link">Log out</a>
+  </div>
+
+  {%- comment -%} ---------- Stats ---------- {%- endcomment -%}
+  <div class="stat-grid">
+    <div class="stat-tile">
+      <div class="stat-tile__value">{{ customer.orders_count }}</div>
+      <div class="stat-tile__label">Total orders</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-tile__value">{{ customer.total_spent | money_without_trailing_zeros }}</div>
+      <div class="stat-tile__label">Total spent</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-tile__value">{{ customer.addresses_count }}</div>
+      <div class="stat-tile__label">Saved addresses</div>
+    </div>
+  </div>
+
+  <div class="account-grid">
+    {%- comment -%} ---------- Recent orders ---------- {%- endcomment -%}
+    <section>
+      <div class="section-head">
+        <h2 class="account-section__title">Recent orders</h2>
+        {% if customer.orders_count > 5 %}
+          <span class="section-head__link">Showing your 5 most recent</span>
+        {% endif %}
+      </div>
+
+      {% if customer.orders_count > 0 %}
+        <table class="account-orders">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Date</th>
+              <th>Payment</th>
+              <th>Fulfillment</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in customer.orders limit: 5 %}
+              <tr>
+                <td><a href="{{ order.customer_url }}" class="customer__link">{{ order.name }}</a></td>
+                <td>{{ order.created_at | date: '%b %d, %Y' }}</td>
+                <td>{{ order.financial_status_label }}</td>
+                <td>{{ order.fulfillment_status_label }}</td>
+                <td>{{ order.total_net_amount | money }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p class="account-empty">You haven't placed any orders yet.</p>
+      {% endif %}
+    </section>
+
+    {%- comment -%} ---------- Details / default address ---------- {%- endcomment -%}
+    <aside>
+      <h2 class="account-section__title">Account details</h2>
+      <div class="account-card">
+        <h3>{{ customer.name }}</h3>
+        <p style="opacity:0.75;margin:0 0 0.75rem;">{{ customer.email }}</p>
+        {% if customer.default_address %}
+          <address>
+            {{ customer.default_address.address1 }}<br>
+            {% if customer.default_address.address2 != blank %}{{ customer.default_address.address2 }}<br>{% endif %}
+            {{ customer.default_address.city }}
+            {{ customer.default_address.province_code }}
+            {{ customer.default_address.zip }}<br>
+            {{ customer.default_address.country }}
+          </address>
+        {% else %}
+          <p class="account-empty">No default address on file.</p>
+        {% endif %}
+        <p style="margin-top:1rem;">
+          <a href="{{ routes.account_addresses_url }}" class="customer__link">Manage addresses ({{ customer.addresses_count }})</a>
+        </p>
+      </div>
+    </aside>
+  </div>
+</div>

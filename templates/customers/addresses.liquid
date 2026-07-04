@@ -1,0 +1,139 @@
+<div class="customer customer--wide">
+  <a href="{{ routes.account_url }}" class="customer__back">&larr; Back to account</a>
+
+  <div class="customer__welcome">
+    <h1 class="customer__title">Your addresses</h1>
+  </div>
+
+  {%- comment -%} ---------- Add new address ---------- {%- endcomment -%}
+  <details class="account-card" style="margin-bottom:2.5rem;">
+    <summary style="cursor:pointer;font-weight:600;">+ Add a new address</summary>
+    <div style="margin-top:1.5rem;">
+      {% form 'customer_address', customer.new_address %}
+        <div class="customer__form">
+          <div class="customer__field">
+            <label>First name</label>
+            <input type="text" name="address[first_name]" value="{{ form.first_name }}" autocomplete="given-name">
+          </div>
+          <div class="customer__field">
+            <label>Last name</label>
+            <input type="text" name="address[last_name]" value="{{ form.last_name }}" autocomplete="family-name">
+          </div>
+          <div class="customer__field">
+            <label>Company</label>
+            <input type="text" name="address[company]" value="{{ form.company }}" autocomplete="organization">
+          </div>
+          <div class="customer__field">
+            <label>Address</label>
+            <input type="text" name="address[address1]" value="{{ form.address1 }}" autocomplete="address-line1">
+          </div>
+          <div class="customer__field">
+            <label>Apartment, suite, etc.</label>
+            <input type="text" name="address[address2]" value="{{ form.address2 }}" autocomplete="address-line2">
+          </div>
+          <div class="customer__field">
+            <label>City</label>
+            <input type="text" name="address[city]" value="{{ form.city }}" autocomplete="address-level2">
+          </div>
+          <div class="customer__field">
+            <label>Country</label>
+            <select name="address[country]">{{ country_option_tags }}</select>
+          </div>
+          <div class="customer__field">
+            <label>Province / State</label>
+            <input type="text" name="address[province]" value="{{ form.province }}" autocomplete="address-level1">
+          </div>
+          <div class="customer__field">
+            <label>ZIP / Postal code</label>
+            <input type="text" name="address[zip]" value="{{ form.zip }}" autocomplete="postal-code">
+          </div>
+          <div class="customer__field">
+            <label>Phone</label>
+            <input type="tel" name="address[phone]" value="{{ form.phone }}" autocomplete="tel">
+          </div>
+          <label style="display:flex;gap:0.5rem;align-items:center;text-transform:none;">
+            <input type="checkbox" name="address[default]" value="1">
+            <span>Set as default address</span>
+          </label>
+          <button type="submit" class="button customer__button">Add address</button>
+        </div>
+      {% endform %}
+    </div>
+  </details>
+
+  {%- comment -%} ---------- Existing addresses ---------- {%- endcomment -%}
+  {% if customer.addresses.size > 0 %}
+    <div class="address-list">
+      {% for address in customer.addresses %}
+        <div class="account-card">
+          <h3>{% if address == customer.default_address %}Default address{% else %}Address{% endif %}</h3>
+          <address>{{ address | format_address }}</address>
+
+          <div class="address-actions">
+            <details>
+              <summary style="cursor:pointer;">Edit</summary>
+              <div style="margin-top:1rem;">
+                {% form 'customer_address', address %}
+                  <div class="customer__form">
+                    <div class="customer__field">
+                      <label>First name</label>
+                      <input type="text" name="address[first_name]" value="{{ address.first_name }}">
+                    </div>
+                    <div class="customer__field">
+                      <label>Last name</label>
+                      <input type="text" name="address[last_name]" value="{{ address.last_name }}">
+                    </div>
+                    <div class="customer__field">
+                      <label>Company</label>
+                      <input type="text" name="address[company]" value="{{ address.company }}">
+                    </div>
+                    <div class="customer__field">
+                      <label>Address</label>
+                      <input type="text" name="address[address1]" value="{{ address.address1 }}">
+                    </div>
+                    <div class="customer__field">
+                      <label>Apartment, suite, etc.</label>
+                      <input type="text" name="address[address2]" value="{{ address.address2 }}">
+                    </div>
+                    <div class="customer__field">
+                      <label>City</label>
+                      <input type="text" name="address[city]" value="{{ address.city }}">
+                    </div>
+                    <div class="customer__field">
+                      <label>Country</label>
+                      <select name="address[country]">{{ country_option_tags }}</select>
+                    </div>
+                    <div class="customer__field">
+                      <label>Province / State</label>
+                      <input type="text" name="address[province]" value="{{ address.province }}">
+                    </div>
+                    <div class="customer__field">
+                      <label>ZIP / Postal code</label>
+                      <input type="text" name="address[zip]" value="{{ address.zip }}">
+                    </div>
+                    <div class="customer__field">
+                      <label>Phone</label>
+                      <input type="tel" name="address[phone]" value="{{ address.phone }}">
+                    </div>
+                    <label style="display:flex;gap:0.5rem;align-items:center;text-transform:none;">
+                      <input type="checkbox" name="address[default]" value="1" {% if address == customer.default_address %}checked{% endif %}>
+                      <span>Set as default address</span>
+                    </label>
+                    <button type="submit" class="button customer__button">Update address</button>
+                  </div>
+                {% endform %}
+              </div>
+            </details>
+
+            <form method="post" action="{{ routes.account_addresses_url }}/{{ address.id }}" onsubmit="return confirm('Delete this address?');">
+              <input type="hidden" name="_method" value="delete">
+              <button type="submit">Delete</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="account-empty">You have no saved addresses yet.</p>
+  {% endif %}
+</div>

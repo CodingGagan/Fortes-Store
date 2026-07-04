@@ -1,0 +1,296 @@
+/* ==========================================================================
+   Customer account pages (classic customer accounts)
+   Login, register, account, orders, addresses, password reset/activate.
+   ========================================================================== */
+
+.customer {
+  max-width: 460px;
+  margin: 0 auto;
+  padding: clamp(3rem, 8vw, 6rem) var(--page-margin);
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  color: var(--color-foreground, #2a2620);
+}
+
+.customer--wide {
+  max-width: 860px;
+}
+
+.customer__block {
+  width: 100%;
+}
+
+.customer__title {
+  margin: 0 0 0.5rem;
+  text-align: center;
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.customer__subtitle {
+  margin: 0 0 2.5rem;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.5;
+  opacity: 0.7;
+}
+
+/* ---------- Form ---------- */
+.customer__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.customer__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.customer__field label {
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.customer__field input {
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: var(--style-border-radius-inputs, 0);
+  background-color: var(--color-background, #ffffff);
+  color: var(--color-foreground, #2a2620);
+  font-family: var(--font-body, 'Montserrat', sans-serif);
+  font-size: 1rem;
+}
+
+.customer__field input:focus {
+  outline: none;
+  border-color: var(--color-foreground, #2a2620);
+}
+
+.customer__button {
+  width: 100%;
+  justify-content: center;
+  padding: 0.95rem 1.5rem;
+  font-size: 0.95rem;
+  margin-top: 0.5rem;
+}
+
+/* ---------- Secondary links / meta ---------- */
+.customer__meta {
+  margin: 1.75rem 0 0;
+  text-align: center;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.customer__meta a,
+.customer__link {
+  color: var(--color-foreground, #2a2620);
+  text-underline-offset: 3px;
+}
+
+.customer__forgot {
+  display: inline-block;
+  margin-top: 1rem;
+  text-align: center;
+  width: 100%;
+  font-size: 0.88rem;
+  opacity: 0.8;
+}
+
+/* ---------- Messages ---------- */
+.customer__errors {
+  margin: 0 0 1.5rem;
+  padding: 0.9rem 1rem 0.9rem 1.3rem;
+  list-style: none;
+  border: 1px solid rgba(170, 55, 45, 0.45);
+  background-color: rgba(170, 55, 45, 0.08);
+  border-radius: var(--style-border-radius-inputs, 0);
+  font-size: 0.9rem;
+}
+
+.customer__errors li {
+  margin: 0.15rem 0;
+}
+
+.customer__success {
+  margin: 0 0 1.5rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(90, 130, 80, 0.5);
+  background-color: rgba(90, 130, 80, 0.1);
+  border-radius: var(--style-border-radius-inputs, 0);
+  font-size: 0.92rem;
+  text-align: center;
+}
+
+/* Recover-password toggle (no JS, uses :target) */
+#recover {
+  display: none;
+}
+#recover:target {
+  display: block;
+}
+#recover:target ~ #login {
+  display: none;
+}
+
+/* ---------- Account dashboard ---------- */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 3rem;
+}
+
+@media (max-width: 749px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-tile {
+  padding: 1.75rem 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--style-border-radius-inputs, 0);
+  background-color: var(--about-cream, #f4f1e9);
+}
+
+.stat-tile__value {
+  font-family: var(--font-display, 'Anton', sans-serif);
+  font-weight: 400;
+  line-height: 1;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+}
+
+.stat-tile__label {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-head__link {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.customer__welcome {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+.customer__welcome .customer__title {
+  text-align: left;
+  margin: 0;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+}
+
+@media (min-width: 750px) {
+  .account-grid {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.account-section__title {
+  margin: 0 0 1rem;
+  font-size: 1.4rem;
+}
+
+.account-orders {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.account-orders th,
+.account-orders td {
+  padding: 0.85rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.account-orders th {
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.6;
+}
+
+.account-card {
+  padding: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: var(--style-border-radius-inputs, 0);
+}
+
+.account-card h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.account-card address {
+  font-style: normal;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+.account-empty {
+  opacity: 0.7;
+}
+
+/* ---------- Address list ---------- */
+.address-list {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 750px) {
+  .address-list {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.address-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.address-actions button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.customer__back {
+  display: inline-block;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}

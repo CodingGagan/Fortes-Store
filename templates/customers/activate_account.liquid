@@ -1,0 +1,29 @@
+<div class="customer">
+  <div class="customer__block">
+    <h1 class="customer__title">Activate your account</h1>
+    <p class="customer__subtitle">Create a password to activate your account.</p>
+
+    {% form 'activate_customer_password' %}
+      {% if form.errors %}
+        <ul class="customer__errors">
+          {% for field in form.errors %}
+            <li>{{ form.errors.translated_fields[field] | capitalize }}: {{ form.errors.messages[field] }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <div class="customer__form">
+        <div class="customer__field">
+          <label for="activate-password">Password</label>
+          <input type="password" name="customer[password]" id="activate-password" autocomplete="new-password" required>
+        </div>
+        <div class="customer__field">
+          <label for="activate-password-confirm">Confirm password</label>
+          <input type="password" name="customer[password_confirmation]" id="activate-password-confirm" autocomplete="new-password" required>
+        </div>
+        <button type="submit" class="button customer__button">Activate account</button>
+        <button type="submit" name="decline" class="customer__forgot" style="background:none;border:none;cursor:pointer;">Decline invitation</button>
+      </div>
+    {% endform %}
+  </div>
+</div>

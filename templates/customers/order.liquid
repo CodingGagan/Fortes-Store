@@ -1,0 +1,76 @@
+<div class="customer customer--wide">
+  <a href="{{ routes.account_url }}" class="customer__back">&larr; Back to account</a>
+
+  <h1 class="customer__title" style="text-align:left;">Order {{ order.name }}</h1>
+  <p class="customer__subtitle" style="text-align:left;">
+    Placed on {{ order.created_at | date: '%B %d, %Y' }}
+  </p>
+
+  {% if order.cancelled %}
+    <p class="customer__errors">
+      Order cancelled on {{ order.cancelled_at | date: '%B %d, %Y' }}. {{ order.cancel_reason_label }}
+    </p>
+  {% endif %}
+
+  <table class="account-orders">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Price</th>
+        <th>Qty</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for line_item in order.line_items %}
+        <tr>
+          <td>{{ line_item.title }}</td>
+          <td>{{ line_item.price | money }}</td>
+          <td>{{ line_item.quantity }}</td>
+          <td>{{ line_item.final_line_price | money }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3">Subtotal</td>
+        <td>{{ order.line_items_subtotal_price | money }}</td>
+      </tr>
+      {% for shipping_method in order.shipping_methods %}
+        <tr>
+          <td colspan="3">Shipping ({{ shipping_method.title }})</td>
+          <td>{{ shipping_method.price | money }}</td>
+        </tr>
+      {% endfor %}
+      {% for tax_line in order.tax_lines %}
+        <tr>
+          <td colspan="3">Tax ({{ tax_line.title }} {{ tax_line.rate_percentage }}%)</td>
+          <td>{{ tax_line.price | money }}</td>
+        </tr>
+      {% endfor %}
+      <tr>
+        <td colspan="3"><strong>Total</strong></td>
+        <td><strong>{{ order.total_net_amount | money }}</strong></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="account-grid" style="margin-top:2.5rem;">
+    <div class="account-card">
+      <h3>Shipping address</h3>
+      {% if order.shipping_address %}
+        <address>{{ order.shipping_address | format_address }}</address>
+      {% else %}
+        <p class="account-empty">—</p>
+      {% endif %}
+    </div>
+    <div class="account-card">
+      <h3>Billing address</h3>
+      {% if order.billing_address %}
+        <address>{{ order.billing_address | format_address }}</address>
+      {% else %}
+        <p class="account-empty">—</p>
+      {% endif %}
+    </div>
+  </div>
+</div>

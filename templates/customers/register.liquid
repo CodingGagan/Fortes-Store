@@ -1,0 +1,40 @@
+<div class="customer">
+  <div class="customer__block">
+    <h1 class="customer__title">Create account</h1>
+    <p class="customer__subtitle">Join {{ shop.name }} — track orders and check out faster.</p>
+
+    {% form 'create_customer' %}
+      {% if form.errors %}
+        <ul class="customer__errors">
+          {% for field in form.errors %}
+            <li>{{ form.errors.translated_fields[field] | capitalize }}: {{ form.errors.messages[field] }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      <div class="customer__form">
+        <div class="customer__field">
+          <label for="register-firstname">First name</label>
+          <input type="text" name="customer[first_name]" id="register-firstname" autocomplete="given-name">
+        </div>
+        <div class="customer__field">
+          <label for="register-lastname">Last name</label>
+          <input type="text" name="customer[last_name]" id="register-lastname" autocomplete="family-name">
+        </div>
+        <div class="customer__field">
+          <label for="register-email">Email</label>
+          <input type="email" name="customer[email]" id="register-email" autocomplete="email" required>
+        </div>
+        <div class="customer__field">
+          <label for="register-password">Password</label>
+          <input type="password" name="customer[password]" id="register-password" autocomplete="new-password" required>
+        </div>
+        <button type="submit" class="button customer__button">Create account</button>
+      </div>
+    {% endform %}
+
+    <p class="customer__meta">
+      Already have an account? <a href="{{ routes.account_login_url }}" class="customer__link">Sign in</a>
+    </p>
+  </div>
+</div>
