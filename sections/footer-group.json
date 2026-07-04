@@ -17,13 +17,14 @@
         "menu-1": {
           "type": "menu",
           "settings": {
-            "heading": "Company"
+            "heading": ""
           }
         },
         "menu-2": {
           "type": "menu",
           "settings": {
-            "heading": "Support"
+            "heading": "",
+            "menu": "footer"
           }
         }
       },

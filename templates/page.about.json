@@ -1,0 +1,39 @@
+{
+  "sections": {
+    "about": {
+      "type": "about",
+      "blocks": {
+        "value-1": {
+          "type": "value",
+          "settings": {
+            "title": "Resilience",
+            "text": "The strength that comes from life's battles."
+          }
+        },
+        "value-2": {
+          "type": "value",
+          "settings": {
+            "title": "Courage",
+            "text": "The will to keep moving forward, no matter the odds."
+          }
+        },
+        "value-3": {
+          "type": "value",
+          "settings": {
+            "title": "Everyday Heroes",
+            "text": "Because true heroism lies in everyday struggles and victories."
+          }
+        }
+      },
+      "block_order": [
+        "value-1",
+        "value-2",
+        "value-3"
+      ],
+      "settings": {}
+    }
+  },
+  "order": [
+    "about"
+  ]
+}

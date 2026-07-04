@@ -1,0 +1,528 @@
+{%- liquid
+  assign hero_img = section.settings.hero_image
+  assign hero_asset = section.settings.hero_image_asset
+-%}
+<div
+  class="contact"
+  style="--about-dark: {{ section.settings.dark_color }}; --about-cream: {{ section.settings.cream_color }}; --about-accent: {{ section.settings.accent_color }};"
+>
+  {%- comment -%} ---------- Hero band ---------- {%- endcomment -%}
+  <section class="contact-hero full-width" style="--contact-hero-height: {{ section.settings.hero_height }}vh;">
+    {% if hero_img != blank %}
+      {{
+        hero_img
+        | image_url: width: 2400
+        | image_tag: widths: '800, 1200, 1600, 2000, 2400', class: 'contact-hero__image', alt: section.settings.hero_heading
+      }}
+    {% elsif hero_asset != blank %}
+      <img
+        src="{{ hero_asset | asset_url }}"
+        class="contact-hero__image"
+        alt="{{ section.settings.hero_heading | escape }}"
+        width="1920"
+        height="1280"
+      >
+    {% else %}
+      <div class="contact-hero__image contact-hero__image--placeholder">
+        {{ 'lifestyle-1' | placeholder_svg_tag: 'placeholder-svg' }}
+      </div>
+    {% endif %}
+
+    <div class="contact-hero__overlay" aria-hidden="true"></div>
+
+    <div class="contact-hero__content">
+      {% if section.settings.hero_kicker != blank %}
+        <p class="contact-hero__kicker">{{ section.settings.hero_kicker }}</p>
+      {% endif %}
+      {% if section.settings.hero_heading != blank %}
+        <h1 class="contact-hero__heading">{{ section.settings.hero_heading }}</h1>
+      {% endif %}
+      {% if section.settings.hero_intro != blank %}
+        <p class="contact-hero__intro">{{ section.settings.hero_intro }}</p>
+      {% endif %}
+    </div>
+  </section>
+
+  {%- comment -%} ---------- Body: info + form ---------- {%- endcomment -%}
+  <section class="contact-body">
+    <div class="contact-body__inner">
+      {%- comment -%} Contact details {%- endcomment -%}
+      <div class="contact-info">
+        {% if section.settings.address != blank %}
+          <div class="contact-info__item">
+            <span class="contact-info__icon" aria-hidden="true">📍</span>
+            <div>
+              <h2 class="contact-info__label">Address</h2>
+              <p class="contact-info__value">{{ section.settings.address }}</p>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if section.settings.phone != blank %}
+          <div class="contact-info__item">
+            <span class="contact-info__icon" aria-hidden="true">📞</span>
+            <div>
+              <h2 class="contact-info__label">Call Us</h2>
+              <p class="contact-info__value">
+                <a href="tel:{{ section.settings.phone | remove: ' ' }}">{{ section.settings.phone }}</a>
+              </p>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if section.settings.email != blank %}
+          <div class="contact-info__item">
+            <span class="contact-info__icon" aria-hidden="true">📧</span>
+            <div>
+              <h2 class="contact-info__label">Email Us</h2>
+              <p class="contact-info__value">
+                <a href="mailto:{{ section.settings.email }}">{{ section.settings.email }}</a>
+              </p>
+            </div>
+          </div>
+        {% endif %}
+
+        {% if section.settings.hours != blank %}
+          <div class="contact-info__item">
+            <span class="contact-info__icon" aria-hidden="true">🕒</span>
+            <div>
+              <h2 class="contact-info__label">Customer Support Hours</h2>
+              <p class="contact-info__value">{{ section.settings.hours }}</p>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      {%- comment -%} Contact form {%- endcomment -%}
+      <div class="contact-form-wrap">
+        {% if section.settings.form_heading != blank %}
+          <h2 class="contact-form__heading">{{ section.settings.form_heading }}</h2>
+        {% endif %}
+
+        {% form 'contact', class: 'contact-form' %}
+          {% if form.posted_successfully? %}
+            <p class="contact-form__success">{{ section.settings.form_success }}</p>
+          {% endif %}
+
+          {% if form.errors %}
+            <ul class="contact-form__errors">
+              {% for field in form.errors %}
+                <li>{{ form.errors.translated_fields[field] | capitalize }} {{ form.errors.messages[field] }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          <div class="contact-form__row">
+            <label class="contact-form__field">
+              <span>Name</span>
+              <input type="text" name="contact[name]" value="{{ form.name }}" autocomplete="name" required>
+            </label>
+            <label class="contact-form__field">
+              <span>Email</span>
+              <input type="email" name="contact[email]" value="{{ form.email }}" autocomplete="email" required>
+            </label>
+          </div>
+
+          <label class="contact-form__field">
+            <span>Phone (optional)</span>
+            <input type="tel" name="contact[phone]" value="{{ form.phone }}" autocomplete="tel">
+          </label>
+
+          <label class="contact-form__field">
+            <span>Message</span>
+            <textarea name="contact[body]" rows="5" required>{{ form.body }}</textarea>
+          </label>
+
+          <button type="submit" class="button contact-form__button">
+            {{ section.settings.form_button | default: 'Send message' }}
+          </button>
+        {% endform %}
+      </div>
+    </div>
+  </section>
+
+  {%- comment -%} ---------- Map ---------- {%- endcomment -%}
+  {% if section.settings.map_embed_url != blank %}
+    <section class="contact-map full-width">
+      <iframe
+        src="{{ section.settings.map_embed_url }}"
+        title="Map"
+        loading="lazy"
+        allowfullscreen
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
+    </section>
+  {% endif %}
+</div>
+
+{% stylesheet %}
+  .contact {
+    --about-dark: #4d4631;
+    --about-cream: #f4f1e9;
+    --about-accent: #b8a06a;
+    background-color: var(--about-cream);
+    color: #2a2620;
+    font-family: var(--font-body, 'Montserrat', sans-serif);
+  }
+
+  /* ---------- Hero ---------- */
+  .contact-hero {
+    position: relative;
+    height: var(--contact-hero-height, 55vh);
+    min-height: 360px;
+    display: flex;
+    align-items: flex-end;
+    color: var(--about-cream);
+  }
+
+  .contact-hero__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .contact-hero__image--placeholder {
+    background-color: #e7e4dd;
+  }
+
+  .contact-hero__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.2) 60%, rgba(0, 0, 0, 0.3) 100%);
+  }
+
+  .contact-hero__content {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: var(--page-width, 1400px);
+    margin: 0 auto;
+    padding: 0 clamp(1.5rem, 5vw, 4rem) clamp(2.5rem, 6vw, 4rem);
+  }
+
+  .contact-hero__kicker {
+    margin: 0 0 1rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    opacity: 0.9;
+  }
+
+  .contact-hero__heading {
+    margin: 0;
+    font-family: var(--font-display, 'Anton', sans-serif);
+    font-weight: 400;
+    text-transform: uppercase;
+    line-height: 0.98;
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    text-shadow: 0 1px 24px rgba(0, 0, 0, 0.3);
+  }
+
+  .contact-hero__intro {
+    margin: 1.25rem 0 0;
+    max-width: 52ch;
+    font-size: clamp(1.05rem, 2vw, 1.3rem);
+    line-height: 1.55;
+  }
+
+  /* ---------- Body ---------- */
+  .contact-body {
+    padding: clamp(3.5rem, 8vw, 6.5rem) clamp(1.5rem, 5vw, 4rem);
+  }
+
+  .contact-body__inner {
+    max-width: var(--page-width, 1400px);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: clamp(2.5rem, 6vw, 5rem);
+    align-items: start;
+  }
+
+  /* ---------- Info ---------- */
+  .contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .contact-info__item {
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .contact-info__item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .contact-info__icon {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .contact-info__label {
+    margin: 0 0 0.4rem;
+    font-family: var(--font-display, 'Anton', sans-serif);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-size: 1.15rem;
+  }
+
+  .contact-info__value {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.55;
+  }
+
+  .contact-info__value a {
+    color: var(--about-dark);
+    text-decoration: none;
+    border-bottom: 1px solid var(--about-accent);
+  }
+
+  /* ---------- Form ---------- */
+  .contact-form-wrap {
+    background-color: var(--about-dark);
+    color: var(--about-cream);
+    padding: clamp(2rem, 4vw, 3rem);
+  }
+
+  .contact-form__heading {
+    margin: 0 0 1.5rem;
+    font-family: var(--font-display, 'Anton', sans-serif);
+    font-weight: 400;
+    text-transform: uppercase;
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+  }
+
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+
+  .contact-form__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1rem;
+  }
+
+  .contact-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .contact-form__field input,
+  .contact-form__field textarea {
+    padding: 0.75rem 0.9rem;
+    border: 1px solid rgba(244, 241, 233, 0.3);
+    background-color: rgba(244, 241, 233, 0.06);
+    color: var(--about-cream);
+    font-family: var(--font-body, 'Montserrat', sans-serif);
+    font-size: 1rem;
+    text-transform: none;
+    letter-spacing: normal;
+  }
+
+  .contact-form__field input:focus,
+  .contact-form__field textarea:focus {
+    outline: none;
+    border-color: var(--about-accent);
+  }
+
+  .contact-form__field textarea {
+    resize: vertical;
+  }
+
+  .contact-form__button {
+    justify-self: start;
+    margin-top: 0.5rem;
+    background-color: var(--about-accent);
+    color: var(--about-dark);
+    border: none;
+    padding: 0.85rem 2rem;
+    cursor: pointer;
+    font-weight: 600;
+  }
+
+  .contact-form__success {
+    margin: 0;
+    padding: 0.9rem 1rem;
+    background-color: rgba(184, 160, 106, 0.2);
+    border: 1px solid var(--about-accent);
+  }
+
+  .contact-form__errors {
+    margin: 0;
+    padding: 0.9rem 1rem 0.9rem 2.2rem;
+    background-color: rgba(180, 60, 50, 0.15);
+    border: 1px solid rgba(180, 60, 50, 0.5);
+  }
+
+  /* ---------- Map ---------- */
+  .contact-map iframe {
+    display: block;
+    width: 100%;
+    height: 420px;
+    border: 0;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 749px) {
+    .contact-body__inner {
+      grid-template-columns: 1fr;
+    }
+    .contact-form__row {
+      grid-template-columns: 1fr;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Contact page",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Palette"
+    },
+    {
+      "type": "color",
+      "id": "dark_color",
+      "label": "Dark / earthy",
+      "default": "#4d4631"
+    },
+    {
+      "type": "color",
+      "id": "cream_color",
+      "label": "Cream / background",
+      "default": "#f4f1e9"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent",
+      "default": "#b8a06a"
+    },
+    {
+      "type": "header",
+      "content": "Hero"
+    },
+    {
+      "type": "text",
+      "id": "hero_kicker",
+      "label": "Kicker",
+      "default": "Get in Touch"
+    },
+    {
+      "type": "text",
+      "id": "hero_heading",
+      "label": "Heading",
+      "default": "Contact Us"
+    },
+    {
+      "type": "textarea",
+      "id": "hero_intro",
+      "label": "Intro",
+      "default": "We'd love to hear from you! Whether it's a query, feedback, or just your story of resilience, our doors are always open."
+    },
+    {
+      "type": "image_picker",
+      "id": "hero_image",
+      "label": "Hero image"
+    },
+    {
+      "type": "text",
+      "id": "hero_image_asset",
+      "label": "Hero image asset (fallback)",
+      "info": "Filename of an image in assets/ (e.g. feature-9006.jpg).",
+      "default": "feature-9006.jpg"
+    },
+    {
+      "type": "range",
+      "id": "hero_height",
+      "min": 40,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "label": "Hero height",
+      "default": 55
+    },
+    {
+      "type": "header",
+      "content": "Contact details"
+    },
+    {
+      "type": "textarea",
+      "id": "address",
+      "label": "Address",
+      "default": "No 50, Ex-Servicemen Colony, RT Nagar, Bangalore – 560032"
+    },
+    {
+      "type": "text",
+      "id": "phone",
+      "label": "Phone",
+      "default": "+91 90362 54554"
+    },
+    {
+      "type": "text",
+      "id": "email",
+      "label": "Email",
+      "default": "support@fortes.store"
+    },
+    {
+      "type": "textarea",
+      "id": "hours",
+      "label": "Support hours",
+      "default": "Monday – Saturday | 10:00 AM – 6:00 PM"
+    },
+    {
+      "type": "header",
+      "content": "Contact form"
+    },
+    {
+      "type": "text",
+      "id": "form_heading",
+      "label": "Form heading",
+      "default": "Send us a message"
+    },
+    {
+      "type": "text",
+      "id": "form_button",
+      "label": "Button label",
+      "default": "Send message"
+    },
+    {
+      "type": "text",
+      "id": "form_success",
+      "label": "Success message",
+      "default": "Thanks for reaching out — we'll get back to you soon."
+    },
+    {
+      "type": "header",
+      "content": "Map"
+    },
+    {
+      "type": "url",
+      "id": "map_embed_url",
+      "label": "Google Maps embed URL",
+      "info": "Optional. In Google Maps: Share → Embed a map → copy the src URL from the iframe."
+    }
+  ],
+  "presets": [
+    {
+      "name": "Contact page"
+    }
+  ]
+}
+{% endschema %}
