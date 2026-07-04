@@ -1,50 +1,1186 @@
 {% comment %}
-  This section is used in the product template to render product page with
-  media, content, and add-to-cart form.
+  Product details (PDP).
+
+  Mirrors the Fortes product mockup:
+    · breadcrumb
+    · image gallery (thumbnail rail + sticky main, hover zoom)
+    · vendor, title, rating, price + compare-at + discount badge
+    · variant pickers — colour swatches + size/other buttons wired to real
+      product.options_with_values / product.variants
+    · quantity stepper + Add to cart (native form) + dynamic Buy it now
+    · trust row + collapsible rows (blocks) + related products
+
+  Variant selection, gallery swapping and the quantity stepper use a small
+  section-scoped script (a PDP genuinely needs it); everything degrades to the
+  first available variant when JS is off.
 
   https://shopify.dev/docs/storefronts/themes/architecture/templates/product
 {% endcomment %}
 
-<div class="product-images">
-  {% for image in product.images %}
-    {% render 'image', class: 'product-image', image: image %}
-  {% endfor %}
+{%- liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign color_name = section.settings.color_option_name | downcase
+  assign on_sale = false
+  if current_variant.compare_at_price > current_variant.price
+    assign on_sale = true
+  endif
+  assign rating = product.metafields.reviews.rating.value
+  assign rating_count = product.metafields.reviews.rating_count.value | default: 0
+-%}
+
+<div class="pdp-page full-width">
+<div class="pdp" id="pdp-{{ section.id }}">
+  {%- comment -%} ===== BREADCRUMB ===== {%- endcomment -%}
+  <nav class="crumb" aria-label="Breadcrumb">
+    <a href="{{ routes.root_url }}">Home</a>
+    <span aria-hidden="true">/</span>
+    {%- if product.collections.first -%}
+      <a href="{{ product.collections.first.url }}">{{ product.collections.first.title }}</a>
+      <span aria-hidden="true">/</span>
+    {%- endif -%}
+    <span class="crumb__current">{{ product.title }}</span>
+  </nav>
+
+  <div class="pdp__grid">
+    {%- comment -%} ===== GALLERY ===== {%- endcomment -%}
+    <div class="gallery{% if section.settings.sticky_gallery %} gallery--sticky{% endif %}">
+      {%- if product.media.size > 1 -%}
+        <div class="gallery__thumbs" role="list">
+          {%- for media in product.media -%}
+            <button
+              type="button"
+              class="gallery__thumb{% if forloop.first %} is-on{% endif %}"
+              data-media-id="{{ media.id }}"
+              data-src="{{ media.preview_image | image_url: width: 1200 }}"
+              aria-label="View image {{ forloop.index }}"
+            >
+              {{
+                media.preview_image
+                | image_url: width: 160
+                | image_tag: widths: '80, 160', loading: 'lazy', alt: media.preview_image.alt | default: product.title
+              }}
+            </button>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+
+      <div class="gallery__main">
+        {%- if on_sale -%}
+          {%- assign save_pct = current_variant.compare_at_price | minus: current_variant.price | times: 100.0 | divided_by: current_variant.compare_at_price | round -%}
+          <span class="gallery__tag" data-save-tag>Save {{ save_pct }}%</span>
+        {%- endif -%}
+        {%- assign main_img_id = 'MainImg-' | append: section.id -%}
+        {%- if product.featured_media -%}
+          {{
+            product.featured_media
+            | image_url: width: 1400
+            | image_tag:
+              widths: '400, 600, 800, 1000, 1400',
+              sizes: '(max-width: 900px) 100vw, 55vw',
+              id: main_img_id,
+              class: 'gallery__img',
+              alt: product.featured_media.alt | default: product.title
+          }}
+        {%- else -%}
+          {{ 'product-1' | placeholder_svg_tag: 'gallery__img gallery__img--placeholder' }}
+        {%- endif -%}
+      </div>
+    </div>
+
+    {%- comment -%} ===== INFO ===== {%- endcomment -%}
+    <div class="info">
+      {%- if section.settings.show_vendor and product.vendor != blank -%}
+        <p class="vendor">{{ product.vendor }}</p>
+      {%- endif -%}
+
+      <h1 class="ptitle">{{ product.title }}</h1>
+
+      {%- if rating != blank or section.settings.show_sku -%}
+        <div class="prow">
+          {%- if rating != blank -%}
+            {%- assign rating_round = rating | round -%}
+            <span class="stars" aria-label="Rated {{ rating }} out of 5">
+              {%- for i in (1..5) -%}{% if i <= rating_round %}★{% else %}☆{% endif %}{%- endfor -%}
+            </span>
+            <a href="#reviews">{{ rating_count }} reviews</a>
+          {%- endif -%}
+          {%- if section.settings.show_sku -%}
+            <span class="prow__sku">· SKU: <span data-sku>{{ current_variant.sku }}</span></span>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+
+      <div class="price" data-price-block>
+        <span class="price__now" data-price>{{ current_variant.price | money }}</span>
+        <span class="price__was was" data-compare {% unless on_sale %}hidden{% endunless %}>
+          {{- current_variant.compare_at_price | money -}}
+        </span>
+        <span class="price__off off" data-discount {% unless on_sale %}hidden{% endunless %}>
+          {%- if on_sale -%}
+            −{{ current_variant.compare_at_price | minus: current_variant.price | times: 100.0 | divided_by: current_variant.compare_at_price | round }}%
+          {%- endif -%}
+        </span>
+      </div>
+      <p class="tax">Tax included. Shipping calculated at checkout.</p>
+
+      {%- form 'product', product, class: 'product-form' -%}
+        <input type="hidden" name="id" value="{{ current_variant.id }}" data-variant-id>
+
+        {%- comment -%} ===== VARIANT PICKERS ===== {%- endcomment -%}
+        {%- unless product.has_only_default_variant -%}
+          {%- for option in product.options_with_values -%}
+            {%- assign opt_name_dc = option.name | downcase -%}
+            {%- assign is_color = false -%}
+            {%- if opt_name_dc == color_name or opt_name_dc contains 'color' or opt_name_dc contains 'colour' -%}
+              {%- assign is_color = true -%}
+            {%- endif -%}
+
+            <div class="opt" data-option-index="{{ option.position }}">
+              <div class="opt__label">
+                {{ option.name }}
+                {%- if is_color %}: <span data-option-selected="{{ option.position }}">{{ option.selected_value }}</span>{% endif -%}
+                {%- if forloop.first == false and section.settings.size_guide_url != blank and is_color == false %}
+                  <a class="size-guide" href="{{ section.settings.size_guide_url }}">Size guide</a>
+                {%- endif -%}
+              </div>
+
+              {%- if is_color -%}
+                <div class="swatches">
+                  {%- for value in option.values -%}
+                    <label
+                      class="swatch{% if value.selected %} is-on{% endif %}"
+                      title="{{ value | escape }}"
+                      style="{% if value.swatch.color %}background: {{ value.swatch.color }};{% elsif value.swatch.image %}background-image: url({{ value.swatch.image | image_url: width: 80 }});{% else %}background: #d8d5cd;{% endif %}"
+                    >
+                      <input
+                        type="radio"
+                        name="option-{{ option.position }}"
+                        value="{{ value | escape }}"
+                        data-option-position="{{ option.position }}"
+                        {% if value.selected %}checked{% endif %}
+                        hidden
+                      >
+                      <span class="visually-hidden">{{ value }}</span>
+                    </label>
+                  {%- endfor -%}
+                </div>
+              {%- else -%}
+                <div class="sizes">
+                  {%- for value in option.values -%}
+                    <label class="size{% if value.selected %} is-on{% endif %}">
+                      <input
+                        type="radio"
+                        name="option-{{ option.position }}"
+                        value="{{ value | escape }}"
+                        data-option-position="{{ option.position }}"
+                        {% if value.selected %}checked{% endif %}
+                        hidden
+                      >
+                      {{ value }}
+                    </label>
+                  {%- endfor -%}
+                </div>
+              {%- endif -%}
+            </div>
+          {%- endfor -%}
+
+          {%- comment -%} No-JS fallback: real variant selector. {%- endcomment -%}
+          <noscript>
+            <div class="opt">
+              <div class="opt__label">Variant</div>
+              <select name="id" class="opt__select">
+                {%- for variant in product.variants -%}
+                  <option value="{{ variant.id }}" {% if variant == current_variant %}selected{% endif %} {% unless variant.available %}disabled{% endunless %}>
+                    {{ variant.title }} — {{ variant.price | money }}{% unless variant.available %} (sold out){% endunless %}
+                  </option>
+                {%- endfor -%}
+              </select>
+            </div>
+          </noscript>
+        {%- endunless -%}
+
+        {%- comment -%} ===== BUY BAR ===== {%- endcomment -%}
+        <div class="buybar">
+          <div class="qty">
+            <button type="button" class="qty__btn" data-qty-minus aria-label="Decrease quantity">−</button>
+            <input
+              class="qty__input"
+              type="number"
+              name="quantity"
+              value="1"
+              min="1"
+              inputmode="numeric"
+              aria-label="Quantity"
+              data-qty-input
+            >
+            <button type="button" class="qty__btn" data-qty-plus aria-label="Increase quantity">+</button>
+          </div>
+          <button type="submit" class="atc" data-atc {% unless current_variant.available %}disabled{% endunless %}>
+            <span data-atc-text>
+              {%- if current_variant.available -%}
+                Add to cart · <span data-atc-price>{{ current_variant.price | money }}</span>
+              {%- else -%}
+                Sold out
+              {%- endif -%}
+            </span>
+          </button>
+        </div>
+
+        {{ form | payment_button }}
+
+        {%- if section.settings.pay_later_text != blank -%}
+          <p class="paylater">{{ section.settings.pay_later_text }}</p>
+        {%- endif -%}
+      {%- endform -%}
+
+      {%- comment -%} ===== TRUST ROW ===== {%- endcomment -%}
+      {%- if section.settings.trust_1 != blank or section.settings.trust_2 != blank or section.settings.trust_3 != blank -%}
+        <div class="trust">
+          {%- if section.settings.trust_1 != blank -%}
+            <div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7h13v10H3z"/><path d="M16 10h4l1 3v4h-5z"/><circle cx="7" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/></svg>
+              {{ section.settings.trust_1 }}
+            </div>
+          {%- endif -%}
+          {%- if section.settings.trust_2 != blank -%}
+            <div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18"/><path d="M5 8l7-5 7 5"/><path d="M5 8v8l7 5 7-5V8"/></svg>
+              {{ section.settings.trust_2 }}
+            </div>
+          {%- endif -%}
+          {%- if section.settings.trust_3 != blank -%}
+            <div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+              {{ section.settings.trust_3 }}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+
+      {%- comment -%} ===== COLLAPSIBLE ROWS (blocks) ===== {%- endcomment -%}
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+          {%- when 'description' -%}
+            {%- if product.description != blank -%}
+              <details class="acc" {% if block.settings.open %}open{% endif %} {{ block.shopify_attributes }}>
+                <summary>{{ block.settings.heading | default: 'Description' }}</summary>
+                <div class="acc__body rte">{{ product.description }}</div>
+              </details>
+            {%- endif -%}
+          {%- when 'collapsible' -%}
+            {%- if block.settings.content != blank -%}
+              <details class="acc" {% if block.settings.open %}open{% endif %} {{ block.shopify_attributes }}>
+                <summary>{{ block.settings.heading }}</summary>
+                <div class="acc__body rte">{{ block.settings.content }}</div>
+              </details>
+            {%- endif -%}
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+  </div>
 </div>
 
-<div class="product-info">
-  <h1>{{ product.title }}</h1>
-  <p>{{ product.price | money }}</p>
-  <p>{{ product.description }}</p>
-</div>
+{%- comment -%} ===== RELATED PRODUCTS ===== {%- endcomment -%}
+{%- if section.settings.show_related -%}
+  {%- assign related_collection = product.collections.first -%}
+  {%- if related_collection and related_collection.products.size > 1 -%}
+    <section class="related" id="reviews">
+      <h2>{{ section.settings.related_heading }}</h2>
+      <div class="rgrid">
+        {%- assign shown = 0 -%}
+        {%- for rp in related_collection.products -%}
+          {%- if rp.id != product.id and shown < 4 -%}
+            {%- assign shown = shown | plus: 1 -%}
+            <a class="rcard" href="{{ rp.url }}">
+              <div class="rcard__media">
+                {%- if rp.featured_media -%}
+                  {{
+                    rp.featured_media
+                    | image_url: width: 600
+                    | image_tag: widths: '300, 450, 600', loading: 'lazy', class: 'rcard__img', alt: rp.title
+                  }}
+                {%- else -%}
+                  {{ 'product-1' | placeholder_svg_tag: 'rcard__img' }}
+                {%- endif -%}
+              </div>
+              <h3>{{ rp.title }}</h3>
+              <p>{{ rp.price | money }}</p>
+            </a>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </section>
+  {%- endif -%}
+{%- endif -%}
 
-<div class="product-form">
-  {% form 'product', product %}
-    {% assign current_variant = product.selected_or_first_available_variant %}
+<script type="application/json" data-variants-json id="VariantsJson-{{ section.id }}">
+  {{ product.variants | json }}
+</script>
+<script type="application/json" data-variant-meta id="VariantMeta-{{ section.id }}">
+  {
+    {%- for v in product.variants -%}
+      "{{ v.id }}": {
+        "priceMoney": {{ v.price | money | json }},
+        "compareMoney": {{ v.compare_at_price | money | json }},
+        "price": {{ v.price | json }},
+        "compare": {{ v.compare_at_price | default: 0 | json }},
+        "sku": {{ v.sku | json }},
+        "mediaId": {{ v.featured_media.id | default: 0 | json }},
+        "mediaSrc": {{ v.featured_media.preview_image | image_url: width: 1400 | json }}
+      }{% unless forloop.last %},{% endunless %}
+    {%- endfor -%}
+  }
+</script>
 
-    <select name="id">
-      {% for variant in product.variants %}
-        <option
-          value="{{ variant.id }}"
-          {% if variant == current_variant %}
-            selected="selected"
-          {% endif %}
-        >
-          {{ variant.title }} - {{ variant.price | money }}
-        </option>
-      {% endfor %}
-    </select>
+<script>
+  (function () {
+    var root = document.getElementById('pdp-{{ section.id }}');
+    if (!root) return;
 
-    <input type="text" name="quantity" min="1" value="1">
+    var mainImg = document.getElementById('MainImg-{{ section.id }}');
 
-    <input type="submit" value="Add to cart">
-    {{ form | payment_button }}
-  {% endform %}
-</div>
+    var variants = [];
+    var meta = {};
+    try {
+      var variantsEl = document.getElementById('VariantsJson-{{ section.id }}');
+      var metaEl = document.getElementById('VariantMeta-{{ section.id }}');
+      if (variantsEl) variants = JSON.parse(variantsEl.textContent) || [];
+      if (metaEl) meta = JSON.parse(metaEl.textContent) || {};
+    } catch (err) {
+      /* Data unavailable — selection + quantity still work below. */
+    }
+
+    var idInput = root.querySelector('[data-variant-id]');
+    var priceEl = root.querySelector('[data-price]');
+    var compareEl = root.querySelector('[data-compare]');
+    var discountEl = root.querySelector('[data-discount]');
+    var atc = root.querySelector('[data-atc]');
+    var atcText = root.querySelector('[data-atc-text]');
+    var skuEl = root.querySelector('[data-sku]');
+    var saveTag = root.querySelector('[data-save-tag]');
+    var optionInputs = root.querySelectorAll('input[data-option-position]');
+
+    function selectedOptions() {
+      var opts = [];
+      root.querySelectorAll('.opt[data-option-index]').forEach(function (group) {
+        var checked = group.querySelector('input[data-option-position]:checked');
+        opts[+group.dataset.optionIndex - 1] = checked ? checked.value : null;
+      });
+      return opts;
+    }
+
+    function findVariant(opts) {
+      return variants.find(function (v) {
+        return v.options.every(function (o, i) { return o === opts[i]; });
+      });
+    }
+
+    // Disable option values whose combination has no matching (existing) variant.
+    function refreshAvailability() {
+      if (!variants.length) return;
+      var current = selectedOptions();
+      root.querySelectorAll('.opt[data-option-index]').forEach(function (group) {
+        var pos = +group.dataset.optionIndex - 1;
+        group.querySelectorAll('input[data-option-position]').forEach(function (input) {
+          var trial = current.slice();
+          trial[pos] = input.value;
+          var match = variants.find(function (v) {
+            return v.options.every(function (o, i) {
+              return i === pos ? o === input.value : (trial[i] == null || o === trial[i]);
+            });
+          });
+          var label = input.closest('.swatch, .size');
+          if (!label) return;
+          label.classList.toggle('is-out', !!match && !match.available);
+          label.classList.toggle('is-none', !match);
+        });
+      });
+    }
+
+    function update() {
+      var variant = findVariant(selectedOptions());
+
+      // Reflect the selected value name (colour label).
+      root.querySelectorAll('[data-option-selected]').forEach(function (span) {
+        var pos = +span.dataset.optionSelected;
+        var checked = root.querySelector('.opt[data-option-index="' + pos + '"] input:checked');
+        if (checked) span.textContent = checked.value;
+      });
+
+      refreshAvailability();
+
+      // No parsed variant data: keep the server-rendered price / button.
+      if (!variants.length) return;
+
+      if (!variant) {
+        atc.disabled = true;
+        atcText.textContent = 'Unavailable';
+        return;
+      }
+
+      var m = meta[variant.id] || {};
+      idInput.value = variant.id;
+      if (priceEl) priceEl.textContent = m.priceMoney;
+      if (skuEl) skuEl.textContent = m.sku || '';
+
+      var hasCompare = m.compare && m.compare > m.price;
+      if (compareEl) { compareEl.hidden = !hasCompare; compareEl.textContent = m.compareMoney; }
+      if (discountEl) {
+        discountEl.hidden = !hasCompare;
+        if (hasCompare) discountEl.textContent = '−' + Math.round((m.compare - m.price) * 100 / m.compare) + '%';
+      }
+      if (saveTag) {
+        saveTag.hidden = !hasCompare;
+        if (hasCompare) saveTag.textContent = 'Save ' + Math.round((m.compare - m.price) * 100 / m.compare) + '%';
+      }
+
+      if (variant.available) {
+        atc.disabled = false;
+        atcText.innerHTML = 'Add to cart · <span data-atc-price>' + m.priceMoney + '</span>';
+      } else {
+        atc.disabled = true;
+        atcText.textContent = 'Sold out';
+      }
+
+      // Swap main image to the variant's featured media.
+      if (mainImg && m.mediaSrc) {
+        setMainImage(m.mediaSrc, m.mediaId);
+      }
+    }
+
+    function setMainImage(src, mediaId) {
+      if (!mainImg) return;
+      mainImg.src = src;
+      mainImg.removeAttribute('srcset');
+      root.querySelectorAll('.gallery__thumb').forEach(function (t) {
+        t.classList.toggle('is-on', mediaId && +t.dataset.mediaId === +mediaId);
+      });
+    }
+
+    optionInputs.forEach(function (input) {
+      input.addEventListener('change', function () {
+        // Move the visual "is-on" state within the group.
+        var group = input.closest('.opt');
+        group.querySelectorAll('.swatch, .size').forEach(function (l) { l.classList.remove('is-on'); });
+        var label = input.closest('.swatch, .size');
+        if (label) label.classList.add('is-on');
+        update();
+      });
+    });
+
+    // Thumbnail rail.
+    root.querySelectorAll('.gallery__thumb').forEach(function (thumb) {
+      thumb.addEventListener('click', function () {
+        root.querySelectorAll('.gallery__thumb').forEach(function (t) { t.classList.remove('is-on'); });
+        thumb.classList.add('is-on');
+        if (mainImg) { mainImg.src = thumb.dataset.src; mainImg.removeAttribute('srcset'); }
+      });
+    });
+
+    // Quantity stepper.
+    var qtyInput = root.querySelector('[data-qty-input]');
+    var minus = root.querySelector('[data-qty-minus]');
+    var plus = root.querySelector('[data-qty-plus]');
+    if (minus) minus.addEventListener('click', function () { qtyInput.value = Math.max(1, (parseInt(qtyInput.value, 10) || 1) - 1); });
+    if (plus) plus.addEventListener('click', function () { qtyInput.value = (parseInt(qtyInput.value, 10) || 1) + 1; });
+
+    // Add-to-cart submission + drawer are handled globally by assets/cart.js,
+    // which intercepts this form and opens the slide-out cart. This section only
+    // owns variant selection, gallery and quantity.
+
+    refreshAvailability();
+  })();
+</script>
+</div>{%- comment -%} /.pdp-page {%- endcomment -%}
+
+{% stylesheet %}
+  /* Design tokens mirroring the Fortes mockup, scoped to this page. */
+  .pdp-page {
+    --col-paper: #f3f1ec;
+    --col-media: #e9e6df;
+    --col-ink: #1c1c1c;
+    --col-body: #4a463f;
+    --col-muted: #8c867c;
+    --col-line: #e4e1d9;
+    --col-accent: #5b6b96;
+    background: var(--col-paper);
+    color: var(--col-ink);
+  }
+
+  .pdp {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 1.2rem var(--page-margin) 4rem;
+    color: var(--col-ink);
+  }
+
+  /* ===== BREADCRUMB ===== */
+  .crumb {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--col-muted, #8c867c);
+    padding: 0.4rem 0 1.5rem;
+  }
+
+  .crumb a:hover {
+    color: var(--col-ink, #1c1c1c);
+  }
+
+  /* ===== GRID ===== */
+  .pdp__grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: clamp(1.5rem, 4vw, 4rem);
+    align-items: start;
+  }
+
+  /* ===== GALLERY ===== */
+  .gallery {
+    display: grid;
+    grid-template-columns: 78px 1fr;
+    gap: 1rem;
+  }
+
+  .gallery--sticky {
+    position: sticky;
+    top: 90px;
+  }
+
+  .gallery__thumbs {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .gallery__thumb {
+    padding: 0;
+    border: 1px solid var(--col-line, #e4e1d9);
+    border-radius: 8px;
+    overflow: hidden;
+    background: none;
+    cursor: pointer;
+    aspect-ratio: 3 / 4;
+  }
+
+  .gallery__thumb.is-on {
+    border-color: var(--col-ink, #1c1c1c);
+  }
+
+  .gallery__thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .gallery__main {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--col-media, #e9e6df);
+    aspect-ratio: 3 / 4;
+  }
+
+  .gallery__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .gallery__main:hover .gallery__img {
+    transform: scale(1.08);
+  }
+
+  .gallery__tag {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    background: #d8b13a;
+    color: #1c1c1c;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+  }
+
+  /* ===== INFO ===== */
+  .vendor {
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--col-accent, #5b6b96);
+    font-weight: 600;
+    margin: 0 0 0.6rem;
+  }
+
+  .ptitle {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    line-height: 1.05;
+    margin: 0 0 0.8rem;
+  }
+
+  .prow {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.2rem;
+  }
+
+  .stars {
+    color: #d8b13a;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+  }
+
+  .prow a {
+    font-size: 0.82rem;
+    color: var(--col-muted, #8c867c);
+    text-decoration: underline;
+  }
+
+  .prow__sku {
+    color: var(--col-muted, #8c867c);
+    font-size: 0.82rem;
+  }
+
+  .price {
+    font-size: 1.6rem;
+    font-weight: 600;
+  }
+
+  .price .was {
+    color: var(--col-muted, #8c867c);
+    font-weight: 400;
+    text-decoration: line-through;
+    margin-left: 0.6rem;
+    font-size: 1.1rem;
+  }
+
+  .price .off {
+    margin-left: 0.6rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #fff;
+    background: #6e2b2b;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    vertical-align: middle;
+  }
+
+  .tax {
+    font-size: 0.78rem;
+    color: var(--col-muted, #8c867c);
+    margin: 0.3rem 0 1.6rem;
+  }
+
+  /* ===== OPTIONS ===== */
+  .opt {
+    margin-bottom: 1.5rem;
+  }
+
+  .opt__label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.7rem;
+  }
+
+  .opt__label span {
+    color: var(--col-muted, #8c867c);
+    font-weight: 400;
+    margin-left: 0.4rem;
+  }
+
+  .size-guide {
+    font-size: 0.78rem;
+    color: var(--col-muted, #8c867c);
+    text-decoration: underline;
+    float: right;
+    cursor: pointer;
+  }
+
+  .opt__select {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--col-line, #e4e1d9);
+    border-radius: 8px;
+    font-family: inherit;
+    background: var(--color-background);
+  }
+
+  .swatches {
+    display: flex;
+    gap: 0.7rem;
+    flex-wrap: wrap;
+  }
+
+  .swatch {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    position: relative;
+    background-size: cover;
+  }
+
+  .swatch.is-on {
+    outline: 2px solid var(--col-ink, #1c1c1c);
+    outline-offset: 3px;
+  }
+
+  .swatch.is-none {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .sizes {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .size {
+    min-width: 52px;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--col-line, #e4e1d9);
+    background: var(--color-background);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.88rem;
+    text-align: center;
+    transition: 0.15s;
+  }
+
+  .size:hover {
+    border-color: var(--col-ink, #1c1c1c);
+  }
+
+  .size.is-on {
+    background: var(--col-ink, #1c1c1c);
+    color: #fff;
+    border-color: var(--col-ink, #1c1c1c);
+  }
+
+  .size.is-out,
+  .size.is-none {
+    color: var(--col-muted, #8c867c);
+    text-decoration: line-through;
+    cursor: not-allowed;
+    background: #f1efe9;
+  }
+
+  /* ===== BUY BAR ===== */
+  .buybar {
+    display: flex;
+    gap: 0.8rem;
+    align-items: stretch;
+    margin: 1.8rem 0 1rem;
+  }
+
+  .qty {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--col-line, #e4e1d9);
+    border-radius: 10px;
+    background: var(--color-background);
+  }
+
+  .qty__btn {
+    width: 44px;
+    border: 0;
+    background: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--color-foreground);
+  }
+
+  .qty__input {
+    width: 42px;
+    text-align: center;
+    border: 0;
+    font-family: inherit;
+    font-size: 1rem;
+    background: none;
+    -moz-appearance: textfield;
+  }
+
+  .qty__input::-webkit-outer-spin-button,
+  .qty__input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .atc {
+    flex: 1;
+    border: 0;
+    border-radius: 10px;
+    background: var(--col-ink, #1c1c1c);
+    color: #fff;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 1rem;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .atc:hover:not(:disabled) {
+    background: #000;
+  }
+
+  .atc[aria-busy='true'] {
+    opacity: 0.75;
+    cursor: progress;
+  }
+
+  .atc:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Shopify dynamic checkout button */
+  .product-form .shopify-payment-button {
+    margin-bottom: 0.7rem;
+  }
+
+  .product-form .shopify-payment-button__button {
+    border-radius: 10px;
+    font-family: inherit;
+    font-weight: 600;
+  }
+
+  .product-form .shopify-payment-button__button--unbranded {
+    background: var(--col-accent, #5b6b96);
+    color: #fff;
+  }
+
+  .product-form .shopify-payment-button__button--unbranded:hover:not([disabled]) {
+    filter: brightness(1.08);
+  }
+
+  .paylater {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--col-muted, #8c867c);
+    margin: 0 0 1.5rem;
+  }
+
+  /* ===== TRUST ===== */
+  .trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 1.5rem;
+    padding: 1.2rem 0;
+    border-top: 1px solid var(--col-line, #e4e1d9);
+    border-bottom: 1px solid var(--col-line, #e4e1d9);
+    margin-bottom: 1.5rem;
+  }
+
+  .trust div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--col-body, #4a463f);
+  }
+
+  .trust svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--col-accent, #5b6b96);
+  }
+
+  /* ===== ACCORDIONS ===== */
+  .acc {
+    border-bottom: 1px solid var(--col-line, #e4e1d9);
+  }
+
+  .acc > summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 1.1rem 0;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .acc > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .acc > summary::after {
+    content: "+";
+    color: var(--col-muted, #8c867c);
+    font-weight: 400;
+    font-size: 1.2rem;
+  }
+
+  .acc[open] > summary::after {
+    content: "–";
+  }
+
+  .acc__body {
+    padding: 0 0 1.2rem;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--col-body, #4a463f);
+  }
+
+  .acc__body ul {
+    margin: 0.4rem 0;
+    padding-left: 1.1rem;
+  }
+
+  /* ===== RELATED ===== */
+  .related {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 0 var(--page-margin) 4rem;
+  }
+
+  .related h2 {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    margin: 0 0 1.5rem;
+  }
+
+  .rgrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(1rem, 2vw, 1.8rem);
+  }
+
+  .rcard__media {
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--col-media, #e9e6df);
+    aspect-ratio: 3 / 4;
+  }
+
+  .rcard__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+  }
+
+  .rcard:hover .rcard__img {
+    transform: scale(1.04);
+  }
+
+  .rcard h3 {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: 1.05rem;
+    margin: 0.7rem 0 0.2rem;
+  }
+
+  .rcard p {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (max-width: 900px) {
+    .pdp__grid {
+      grid-template-columns: 1fr;
+    }
+    .gallery--sticky {
+      position: static;
+    }
+    .rgrid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .gallery {
+      grid-template-columns: 1fr;
+    }
+    .gallery__thumbs {
+      flex-direction: row;
+      order: 2;
+      overflow-x: auto;
+    }
+    .gallery__thumb {
+      width: 64px;
+      flex: 0 0 auto;
+    }
+  }
+{% endstylesheet %}
 
 {% schema %}
 {
-  "name": "t:general.product",
-  "settings": [],
+  "name": "Product",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "label": "Show vendor",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sku",
+      "label": "Show SKU",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_gallery",
+      "label": "Sticky gallery on scroll",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "color_option_name",
+      "label": "Colour option name",
+      "info": "Which product option renders as colour swatches.",
+      "default": "Color"
+    },
+    {
+      "type": "url",
+      "id": "size_guide_url",
+      "label": "Size guide link"
+    },
+    {
+      "type": "text",
+      "id": "pay_later_text",
+      "label": "Pay-later text",
+      "default": "Or 3 interest-free payments with your favourite wallet"
+    },
+    {
+      "type": "header",
+      "content": "Trust badges"
+    },
+    {
+      "type": "text",
+      "id": "trust_1",
+      "label": "Trust item 1",
+      "default": "Free shipping over ₹1,499"
+    },
+    {
+      "type": "text",
+      "id": "trust_2",
+      "label": "Trust item 2",
+      "default": "30-day easy returns"
+    },
+    {
+      "type": "text",
+      "id": "trust_3",
+      "label": "Trust item 3",
+      "default": "Secure checkout"
+    },
+    {
+      "type": "header",
+      "content": "Related products"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_related",
+      "label": "Show related products",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "related_heading",
+      "label": "Related heading",
+      "default": "You may also like"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "description",
+      "name": "Description",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Description"
+        },
+        {
+          "type": "checkbox",
+          "id": "open",
+          "label": "Open by default",
+          "default": true
+        }
+      ]
+    },
+    {
+      "type": "collapsible",
+      "name": "Collapsible row",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Details"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Content",
+          "info": "Type static text, or connect a product metafield via the dynamic-source picker."
+        },
+        {
+          "type": "checkbox",
+          "id": "open",
+          "label": "Open by default",
+          "default": false
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product",
+      "blocks": [
+        { "type": "description" },
+        {
+          "type": "collapsible",
+          "settings": { "heading": "Fabric & Care" }
+        },
+        {
+          "type": "collapsible",
+          "settings": { "heading": "Shipping & Returns" }
+        },
+        {
+          "type": "collapsible",
+          "settings": { "heading": "Fit & Sizing" }
+        }
+      ]
+    }
+  ],
   "disabled_on": {
     "groups": ["header", "footer"]
   }

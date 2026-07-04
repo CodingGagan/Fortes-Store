@@ -1,5 +1,13 @@
+{%- liquid
+  assign linked_product = section.settings.product
+  assign btn_url = section.settings.button_url
+  if btn_url == blank and linked_product != blank
+    assign btn_url = linked_product.url
+  endif
+  assign section_url = linked_product.url | default: section.settings.button_url
+-%}
 <div
-  class="hero full-width"
+  class="hero full-width{% if section_url != blank %} has-link{% endif %}"
   style="--hero-height: {{ section.settings.image_height }}vh; --hero-text: {{ section.settings.text_color }};"
 >
   {% if section.settings.image != blank %}
@@ -22,13 +30,21 @@
     </div>
   {% endif %}
 
+  {% if section_url != blank %}
+    <a
+      class="hero__link"
+      href="{{ section_url }}"
+      aria-label="{{ section.settings.heading | default: linked_product.title | default: 'View product' | escape }}"
+    ></a>
+  {% endif %}
+
   <div class="hero__overlay" data-align="{{ section.settings.content_position }}">
     {% if section.settings.heading != blank %}
       <h1 class="hero__heading">{{ section.settings.heading }}</h1>
     {% endif %}
 
-    {% if section.settings.button_label != blank %}
-      <a href="{{ section.settings.button_url }}" class="button hero__button">
+    {% if section.settings.button_label != blank and btn_url != blank %}
+      <a href="{{ btn_url }}" class="button hero__button">
         {{ section.settings.button_label }}
       </a>
     {% endif %}
@@ -81,6 +97,22 @@
   }
   .hero__overlay[data-align='bottom'] {
     justify-content: flex-end;
+  }
+
+  /* Whole-section click target (sits above image, below the CTA). */
+  .hero__link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .hero.has-link .hero__overlay {
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .hero.has-link .hero__button {
+    pointer-events: auto;
   }
 
   .hero__heading {
@@ -139,6 +171,12 @@
       "default": 90
     },
     {
+      "type": "product",
+      "id": "product",
+      "label": "Linked product",
+      "info": "The section image and button link to this product's page."
+    },
+    {
       "type": "text",
       "id": "button_label",
       "label": "Button label",
@@ -147,7 +185,8 @@
     {
       "type": "url",
       "id": "button_url",
-      "label": "Button link"
+      "label": "Button link (override)",
+      "info": "Optional. Leave blank to use the linked product above."
     }
   ],
   "presets": [

@@ -7,9 +7,15 @@
   if btn_text == blank
     assign btn_text = 'var(--color-button-text)'
   endif
+  assign linked_product = section.settings.product
+  assign btn_url = section.settings.button_url
+  if btn_url == blank and linked_product != blank
+    assign btn_url = linked_product.url
+  endif
+  assign section_url = linked_product.url | default: section.settings.button_url
 -%}
 <div
-  class="split full-width"
+  class="split full-width{% if section_url != blank %} has-link{% endif %}"
   data-side="{{ section.settings.image_side }}"
   style="--split-height: {{ section.settings.image_height }}vh; --split-heading-color: {{ section.settings.heading_color }}; --split-btn-bg: {{ btn_bg }}; --split-btn-text: {{ btn_text }}; --split-gradient-color: {{ section.settings.gradient_color }}; --split-gradient-height: {{ section.settings.gradient_height }}%; --split-btn-offset: {{ section.settings.button_offset }}%;"
 >
@@ -38,13 +44,21 @@
         <div class="split__gradient" aria-hidden="true"></div>
       {% endif %}
 
+      {% if section_url != blank %}
+        <a
+          class="split__link"
+          href="{{ section_url }}"
+          aria-label="{{ section.settings.heading | default: linked_product.title | default: 'View product' | escape }}"
+        ></a>
+      {% endif %}
+
       {% if section.settings.heading != blank %}
         <h2 class="split__heading">{{ section.settings.heading }}</h2>
       {% endif %}
 
-      {% if section.settings.button_label != blank %}
+      {% if section.settings.button_label != blank and btn_url != blank %}
         <a
-          href="{{ section.settings.button_url }}"
+          href="{{ btn_url }}"
           class="button split__button"
           data-style="{{ section.settings.button_style }}"
         >
@@ -99,6 +113,13 @@
     pointer-events: none;
   }
 
+  /* Whole-image click target (sits above image/gradient, below heading + CTA). */
+  .split__link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
   .split__heading {
     position: absolute;
     inset: 0;
@@ -112,6 +133,7 @@
     color: var(--split-heading-color, #f4f1e9);
     font-size: clamp(2.5rem, 6vw, 5rem);
     text-shadow: 0 1px 24px rgba(0, 0, 0, 0.25);
+    pointer-events: none;
   }
 
   /* Button overlaid on the image, centered near the bottom. */
@@ -228,6 +250,12 @@
       "content": "Button"
     },
     {
+      "type": "product",
+      "id": "product",
+      "label": "Linked product",
+      "info": "The section image and button link to this product's page."
+    },
+    {
       "type": "text",
       "id": "button_label",
       "label": "Button label",
@@ -236,7 +264,8 @@
     {
       "type": "url",
       "id": "button_url",
-      "label": "Button link"
+      "label": "Button link (override)",
+      "info": "Optional. Leave blank to use the linked product above."
     },
     {
       "type": "select",

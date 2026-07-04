@@ -1,10 +1,13 @@
 <header class="header full-width">
+  <div class="header__bar"></div>
+
   <div class="header__inner">
-    <nav class="header__menu" aria-label="Primary">
-      {% for link in section.settings.menu.links %}
-        <a href="{{ link.url }}">{{ link.title }}</a>
-      {% endfor %}
-    </nav>
+    <div class="header__left">
+      <a href="{{ routes.all_products_collection_url }}" class="header__shop">
+        {{ 'icon-menu.svg' | inline_asset_content }}
+        <span>Shop</span>
+      </a>
+    </div>
 
     <a href="{{ routes.root_url }}" class="header__logo">
       {% if section.settings.logo != blank %}
@@ -18,7 +21,12 @@
       {% endif %}
     </a>
 
-    <div class="header__icons">
+    <div class="header__right">
+      <a href="{{ routes.search_url }}" class="header__search">
+        <span>Search</span>
+        {{ 'icon-search.svg' | inline_asset_content }}
+      </a>
+
       {% if shop.customer_accounts_enabled %}
         <shopify-account menu="{{ section.settings.customer_account_menu }}">
           {{ 'icon-account.svg' | inline_asset_content }}
@@ -37,7 +45,14 @@
 
 {% stylesheet %}
   .header {
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    --icon-stroke-width: 1.5;
+    font-family: var(--font-body);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .header__bar {
+    height: 6px;
+    background: var(--color-foreground);
   }
 
   .header__inner {
@@ -48,15 +63,23 @@
     padding: 0 var(--page-margin);
   }
 
-  .header__menu {
-    display: flex;
-    gap: 1.5rem;
+  .header__left {
+    justify-self: start;
   }
 
-  .header__menu a {
+  .header__shop {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
     color: var(--color-foreground);
     text-decoration: none;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  .header__shop svg {
+    width: 1.4rem;
+    height: auto;
   }
 
   .header__logo {
@@ -66,11 +89,12 @@
   }
 
   .header__wordmark {
-    font-family: var(--font-heading--family);
-    font-size: 1.5rem;
-    letter-spacing: 0.35em;
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding-left: 0.35em;
+    padding-left: 0.08em;
   }
 
   .header__logo-image {
@@ -78,22 +102,31 @@
     width: auto;
   }
 
-  .header__icons {
+  .header__right {
     justify-self: end;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 1.5rem;
   }
 
-  .header__icons a,
-  .header__icons shopify-account {
+  .header__search {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-foreground);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+
+  .header__right shopify-account,
+  .header__cart {
     position: relative;
     color: var(--color-foreground);
     display: inline-flex;
     align-items: center;
   }
 
-  .header__icons svg {
+  .header__right svg {
     width: 1.4rem;
     height: auto;
   }
@@ -106,13 +139,16 @@
   }
 
   @media (max-width: 749px) {
-    .header__menu {
-      gap: 1rem;
-      font-size: 0.8rem;
+    .header__shop span,
+    .header__search span {
+      display: none;
+    }
+    .header__right {
+      gap: 1.1rem;
     }
     .header__wordmark {
-      font-size: 1.2rem;
-      letter-spacing: 0.25em;
+      font-size: 1.3rem;
+      letter-spacing: 0.1em;
     }
   }
 {% endstylesheet %}
