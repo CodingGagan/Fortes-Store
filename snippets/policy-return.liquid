@@ -1,0 +1,67 @@
+{% comment %}
+  Default Return / Refund Policy text. Details passed in: biz_name,
+  contact_email, address. Override by adding content to the Shopify Page.
+
+  NOTE: General template, not legal advice. Have it reviewed before publishing.
+{% endcomment %}
+
+<p>
+  At <strong>{{ biz_name }}</strong> we want you to love what you buy. If something isn't right,
+  this policy explains how returns, exchanges and refunds work.
+</p>
+
+<h2>1. Return Window</h2>
+<p>
+  You may request a return within <strong>7 days</strong> of delivery. To be eligible, items must
+  be unused, unwashed and in their original condition with all tags and packaging intact.
+</p>
+
+<h2>2. Non-Returnable Items</h2>
+<ul>
+  <li>Items marked "Final Sale" or "Clearance".</li>
+  <li>Innerwear, socks and other hygiene-sensitive products, once opened.</li>
+  <li>Products damaged due to misuse or normal wear after delivery.</li>
+</ul>
+
+<h2>3. How to Start a Return</h2>
+<ol>
+  <li>Email us at <a href="mailto:{{ contact_email }}">{{ contact_email }}</a> with your order number and the item(s) you wish to return.</li>
+  <li>We'll confirm eligibility and share return instructions.</li>
+  <li>Pack the item securely and hand it to the assigned courier or ship it as instructed.</li>
+</ol>
+
+<h2>4. Refunds</h2>
+<p>
+  Once we receive and inspect your return, we'll notify you of approval. <strong>Approved refunds
+  are processed to your original payment method through Razorpay</strong>, our payment gateway.
+  After a refund is initiated, it typically reflects in your account within <strong>5–7 business
+  days</strong>, depending on your bank or card issuer.
+</p>
+<p>
+  For prepaid orders the refund returns to the source account/UPI/card used at checkout. For any
+  cash-on-delivery orders, we may request bank or UPI details to process the refund.
+</p>
+
+<h2>5. Exchanges</h2>
+<p>
+  If you need a different size or colour, let us know when starting your return. Exchanges are
+  subject to stock availability; if the item is unavailable, we'll issue a refund instead.
+</p>
+
+<h2>6. Damaged or Wrong Items</h2>
+<p>
+  If you receive a damaged, defective or incorrect item, contact us within <strong>48 hours</strong>
+  of delivery with photos. We'll arrange a replacement or full refund at no extra cost to you.
+</p>
+
+<h2>7. Shipping Costs</h2>
+<p>
+  Original shipping charges are non-refundable unless the return is due to our error. Return
+  shipping costs, where applicable, will be communicated when your return is approved.
+</p>
+
+<h2>8. Contact Us</h2>
+<p>
+  Questions about returns or refunds? Reach us at
+  <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>{% if address != blank %}, or write to us at {{ address }}{% endif %}.
+</p>

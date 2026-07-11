@@ -38,7 +38,11 @@
     ></a>
   {% endif %}
 
-  <div class="hero__overlay" data-align="{{ section.settings.content_position }}">
+  <div
+    class="hero__overlay"
+    data-align="{{ section.settings.content_position }}"
+    data-align-x="{{ section.settings.content_alignment }}"
+  >
     {% if section.settings.heading != blank %}
       <h1 class="hero__heading">{{ section.settings.heading }}</h1>
     {% endif %}
@@ -85,10 +89,11 @@
     flex-direction: column;
     align-items: center;
     gap: 2rem;
-    padding: 3rem 1.5rem;
+    padding: 3rem clamp(1.5rem, 6vw, 5rem);
     text-align: center;
   }
 
+  /* Vertical position */
   .hero__overlay[data-align='top'] {
     justify-content: flex-start;
   }
@@ -97,6 +102,20 @@
   }
   .hero__overlay[data-align='bottom'] {
     justify-content: flex-end;
+  }
+
+  /* Horizontal alignment */
+  .hero__overlay[data-align-x='left'] {
+    align-items: flex-start;
+    text-align: left;
+  }
+  .hero__overlay[data-align-x='center'] {
+    align-items: center;
+    text-align: center;
+  }
+  .hero__overlay[data-align-x='right'] {
+    align-items: flex-end;
+    text-align: right;
   }
 
   /* Whole-section click target (sits above image, below the CTA). */
@@ -152,11 +171,22 @@
     {
       "type": "select",
       "id": "content_position",
-      "label": "Content position",
+      "label": "Content position (vertical)",
       "options": [
         { "value": "top", "label": "Top" },
         { "value": "center", "label": "Center" },
         { "value": "bottom", "label": "Bottom" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "select",
+      "id": "content_alignment",
+      "label": "Content alignment (horizontal)",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
       ],
       "default": "center"
     },

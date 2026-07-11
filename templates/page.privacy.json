@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "policy-page",
+      "settings": {
+        "policy_type": "privacy",
+        "fallback_title": "Privacy Policy"
+      }
+    }
+  },
+  "order": ["main"]
+}

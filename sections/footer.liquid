@@ -58,6 +58,20 @@
 
   <div class="footer__bottom">
     <span>&copy; {{ 'now' | date: '%Y' }} {{ shop.name }}</span>
+
+    <nav class="footer__legal" aria-label="Legal">
+      {% if section.settings.legal_menu != blank and section.settings.legal_menu.links.size > 0 %}
+        {% for link in section.settings.legal_menu.links %}
+          <a href="{{ link.url }}">{{ link.title }}</a>
+        {% endfor %}
+      {% else %}
+        {% comment %} Fallback to the policy pages until a legal menu is assigned in admin. {% endcomment %}
+        <a href="{{ pages['privacy-policy'].url | default: '/pages/privacy-policy' }}">Privacy Policy</a>
+        <a href="{{ pages['terms-and-conditions'].url | default: '/pages/terms-and-conditions' }}">Terms &amp; Conditions</a>
+        <a href="{{ pages['return-policy'].url | default: '/pages/return-policy' }}">Return Policy</a>
+      {% endif %}
+    </nav>
+
     <span>{{ powered_by_link }}</span>
   </div>
 </footer>
@@ -222,6 +236,17 @@
     text-decoration: none;
   }
 
+  .footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+  }
+
+  .footer__legal a:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
   @media (max-width: 989px) {
     .footer__top {
       grid-template-columns: 1fr;
@@ -289,6 +314,12 @@
       "id": "signin_label",
       "label": "Sign in label",
       "default": "Sign In"
+    },
+    {
+      "type": "link_list",
+      "id": "legal_menu",
+      "label": "Legal links (bottom bar)",
+      "info": "Optional. Leave blank to auto-link the Privacy, Terms and Return pages."
     }
   ],
   "blocks": [

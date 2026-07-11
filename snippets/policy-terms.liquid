@@ -1,0 +1,81 @@
+{% comment %}
+  Default Terms & Conditions text. Details passed in: biz_name, contact_email,
+  address. Override by adding content to the Shopify Page.
+
+  NOTE: General template, not legal advice. Have it reviewed before publishing.
+{% endcomment %}
+
+<p>
+  These Terms &amp; Conditions ("Terms") govern your use of the <strong>{{ biz_name }}</strong>
+  website and the purchase of any products from our online store. By accessing our store or
+  placing an order, you agree to these Terms.
+</p>
+
+<h2>1. Eligibility</h2>
+<p>
+  You must be at least 18 years old, or accessing the store under the supervision of a parent or
+  guardian, and capable of entering into a legally binding contract to make a purchase.
+</p>
+
+<h2>2. Products &amp; Pricing</h2>
+<ul>
+  <li>We try to display product details, colours and pricing as accurately as possible; minor variations may occur.</li>
+  <li>All prices are listed in Indian Rupees (INR) unless stated otherwise and are inclusive or exclusive of taxes as indicated at checkout.</li>
+  <li>We reserve the right to correct pricing errors, and to change prices or discontinue products at any time.</li>
+</ul>
+
+<h2>3. Orders</h2>
+<p>
+  Your order is an offer to buy. We may accept or decline it — for example, if a product is out of
+  stock, a pricing error is found, or the order is flagged for fraud. Where we cannot fulfil an
+  accepted, paid order, we will refund you.
+</p>
+
+<h2>4. Payments</h2>
+<p>
+  Payments are processed securely through our payment gateway, <strong>Razorpay</strong>, which
+  supports cards, UPI, net banking and other methods it makes available. By placing an order you
+  authorise us and Razorpay to charge the total order amount to your chosen payment method. Your
+  payment credentials are handled by Razorpay and are not stored on our servers. Orders are
+  confirmed only after payment is successfully authorised.
+</p>
+
+<h2>5. Shipping &amp; Delivery</h2>
+<p>
+  Delivery timelines shown are estimates. Risk in the products passes to you on delivery. We are
+  not liable for delays caused by courier partners or events beyond our reasonable control.
+</p>
+
+<h2>6. Returns &amp; Refunds</h2>
+<p>
+  Returns, exchanges and refunds are governed by our Return / Refund Policy, which forms part of
+  these Terms. Approved refunds are issued to the original payment method via Razorpay.
+</p>
+
+<h2>7. Intellectual Property</h2>
+<p>
+  All content on this store — including logos, text, images and designs — is owned by or licensed
+  to {{ biz_name }} and may not be copied or used without our written permission.
+</p>
+
+<h2>8. Acceptable Use</h2>
+<p>You agree not to misuse the store, including by attempting to gain unauthorised access, disrupt its operation, or use it for any unlawful purpose.</p>
+
+<h2>9. Limitation of Liability</h2>
+<p>
+  To the maximum extent permitted by law, {{ biz_name }} shall not be liable for any indirect or
+  consequential loss arising from your use of the store or products. Our total liability for any
+  claim shall not exceed the amount you paid for the relevant order.
+</p>
+
+<h2>10. Governing Law</h2>
+<p>
+  These Terms are governed by the laws of India, and disputes shall be subject to the exclusive
+  jurisdiction of the competent courts at our registered location.
+</p>
+
+<h2>11. Contact Us</h2>
+<p>
+  For any questions about these Terms, contact us at
+  <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>{% if address != blank %}, or write to us at {{ address }}{% endif %}.
+</p>

@@ -1,0 +1,180 @@
+{% comment %}
+  Styled legal / policy page (Privacy, Terms, Return).
+
+  Content control:
+  · If the Shopify Page body has content, that is shown (edit it in
+    Online Store → Pages — full admin control, overrides everything below).
+  · Otherwise a built-in default document is rendered based on "Policy type".
+    Key details (business name, email, address, last updated) come from the
+    settings below so merchants can change them without touching legal text.
+{% endcomment %}
+
+{%- liquid
+  assign biz_name = section.settings.business_name
+  if biz_name == blank
+    assign biz_name = shop.name
+  endif
+  assign contact_email = section.settings.contact_email
+  if contact_email == blank
+    assign contact_email = shop.email
+  endif
+-%}
+
+<div class="policy">
+  <div class="policy__inner">
+    <header class="policy__head">
+      <h1 class="policy__title">{{ page.title | default: section.settings.fallback_title }}</h1>
+      {%- if section.settings.last_updated != blank -%}
+        <p class="policy__updated">Last updated: {{ section.settings.last_updated }}</p>
+      {%- endif -%}
+    </header>
+
+    <div class="policy__body rte">
+      {%- if page.content != blank -%}
+        {{ page.content }}
+      {%- else -%}
+        {%- case section.settings.policy_type -%}
+          {%- when 'privacy' -%}
+            {%- render 'policy-privacy', biz_name: biz_name, contact_email: contact_email, address: section.settings.business_address -%}
+          {%- when 'terms' -%}
+            {%- render 'policy-terms', biz_name: biz_name, contact_email: contact_email, address: section.settings.business_address -%}
+          {%- when 'return' -%}
+            {%- render 'policy-return', biz_name: biz_name, contact_email: contact_email, address: section.settings.business_address -%}
+          {%- else -%}
+            <p>Add content to this page in Online Store → Pages, or choose a Policy type in the theme editor.</p>
+        {%- endcase -%}
+      {%- endif -%}
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  .policy {
+    font-family: var(--font-body);
+    color: #1a1a1a;
+    padding: 3rem var(--page-margin) 5rem;
+  }
+
+  .policy__inner {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .policy__head {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #ece9e2;
+  }
+
+  .policy__title {
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: clamp(2rem, 5vw, 3rem);
+    line-height: 1.1;
+    margin: 0;
+  }
+
+  .policy__updated {
+    margin: 0.75rem 0 0;
+    font-size: 0.85rem;
+    color: #9a938a;
+  }
+
+  .policy__body {
+    font-size: 0.98rem;
+    line-height: 1.75;
+  }
+
+  .policy__body h2 {
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: 1.35rem;
+    line-height: 1.2;
+    margin: 2.4rem 0 0.8rem;
+  }
+
+  .policy__body h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 1.6rem 0 0.6rem;
+  }
+
+  .policy__body p,
+  .policy__body ul,
+  .policy__body ol {
+    margin: 0 0 1rem;
+  }
+
+  .policy__body ul,
+  .policy__body ol {
+    padding-left: 1.3rem;
+  }
+
+  .policy__body li {
+    margin-bottom: 0.5rem;
+  }
+
+  .policy__body a {
+    color: inherit;
+    text-underline-offset: 2px;
+  }
+
+  .policy__body strong {
+    font-weight: 600;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Policy page",
+  "settings": [
+    {
+      "type": "select",
+      "id": "policy_type",
+      "label": "Policy type",
+      "info": "Chooses the built-in default text. Ignored if the page has its own content.",
+      "options": [
+        { "value": "none", "label": "None (use page content)" },
+        { "value": "privacy", "label": "Privacy Policy" },
+        { "value": "terms", "label": "Terms & Conditions" },
+        { "value": "return", "label": "Return / Refund Policy" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "text",
+      "id": "fallback_title",
+      "label": "Fallback title",
+      "info": "Used only if the page itself has no title.",
+      "default": "Policy"
+    },
+    {
+      "type": "text",
+      "id": "last_updated",
+      "label": "Last updated",
+      "info": "e.g. 11 July 2026. Leave blank to hide."
+    },
+    {
+      "type": "header",
+      "content": "Business details (used in default text)"
+    },
+    {
+      "type": "text",
+      "id": "business_name",
+      "label": "Legal / business name",
+      "info": "Leave blank to use the store name."
+    },
+    {
+      "type": "text",
+      "id": "contact_email",
+      "label": "Contact email",
+      "info": "Leave blank to use the store email."
+    },
+    {
+      "type": "text",
+      "id": "business_address",
+      "label": "Business address"
+    }
+  ]
+}
+{% endschema %}

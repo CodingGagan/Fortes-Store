@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "policy-page",
+      "settings": {
+        "policy_type": "terms",
+        "fallback_title": "Terms & Conditions"
+      }
+    }
+  },
+  "order": ["main"]
+}
