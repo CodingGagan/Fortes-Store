@@ -274,6 +274,48 @@
                 <div class="acc__body rte">{{ block.settings.content }}</div>
               </details>
             {%- endif -%}
+          {%- when 'combo' -%}
+            {%- assign combo_items = product.metafields.custom.combo_products.value -%}
+            {%- if combo_items and combo_items.size > 0 -%}
+              <div class="combo" {{ block.shopify_attributes }}>
+                <div class="combo__head">
+                  <span class="combo__title">{{ block.settings.heading }}</span>
+                  <span class="combo__count">{{ combo_items.size }} items</span>
+                </div>
+                <ul class="combo__list" role="list">
+                  {%- for item in combo_items -%}
+                    <li class="combo__item">
+                      <a href="{{ item.url }}" class="combo__link">
+                        <span class="combo__media">
+                          {%- if item.featured_media -%}
+                            {{ item.featured_media | image_url: width: 160 | image_tag: widths: '80, 160', loading: 'lazy', alt: item.title, class: 'combo__img' }}
+                          {%- endif -%}
+                        </span>
+                        <span class="combo__info">
+                          <span class="combo__name">{{ item.title }}</span>
+                          {%- if block.settings.show_item_price -%}
+                            <span class="combo__price">{{ item.price | money }}</span>
+                          {%- endif -%}
+                        </span>
+                      </a>
+                    </li>
+                  {%- endfor -%}
+                </ul>
+                {%- if block.settings.show_savings -%}
+                  {%- assign combo_sum = 0 -%}
+                  {%- for item in combo_items -%}
+                    {%- assign combo_sum = combo_sum | plus: item.price -%}
+                  {%- endfor -%}
+                  {%- if combo_sum > current_variant.price -%}
+                    <p class="combo__savings">
+                      Buy together for <strong>{{ current_variant.price | money }}</strong>
+                      <span class="combo__was">{{ combo_sum | money }}</span>
+                      <span class="combo__save">Save {{ combo_sum | minus: current_variant.price | money }}</span>
+                    </p>
+                  {%- endif -%}
+                {%- endif -%}
+              </div>
+            {%- endif -%}
         {%- endcase -%}
       {%- endfor -%}
     </div>
@@ -903,6 +945,111 @@
     stroke: var(--col-accent, #5b6b96);
   }
 
+  /* ===== COMBO CONTENTS ===== */
+  .combo {
+    border: 1px solid var(--col-line, #e4e1d9);
+    border-radius: 12px;
+    padding: 1.1rem 1.2rem;
+    margin-bottom: 1.5rem;
+    background: var(--color-background);
+  }
+
+  .combo__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.9rem;
+  }
+
+  .combo__title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+  }
+
+  .combo__count {
+    font-size: 0.75rem;
+    color: var(--col-muted, #8c867c);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .combo__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .combo__link {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    color: var(--col-ink, #1c1c1c);
+  }
+
+  .combo__media {
+    flex: 0 0 auto;
+    width: 52px;
+    aspect-ratio: 3 / 4;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--col-media, #e9e6df);
+  }
+
+  .combo__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .combo__info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .combo__name {
+    font-size: 0.9rem;
+    line-height: 1.25;
+  }
+
+  .combo__link:hover .combo__name {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .combo__price {
+    font-size: 0.8rem;
+    color: var(--col-muted, #8c867c);
+  }
+
+  .combo__savings {
+    margin: 1rem 0 0;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--col-line, #e4e1d9);
+    font-size: 0.9rem;
+  }
+
+  .combo__was {
+    color: var(--col-muted, #8c867c);
+    text-decoration: line-through;
+    margin-left: 0.4rem;
+  }
+
+  .combo__save {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #fff;
+    background: #4f7a4f;
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+  }
+
   /* ===== ACCORDIONS ===== */
   .acc {
     border-bottom: 1px solid var(--col-line, #e4e1d9);
@@ -1159,12 +1306,42 @@
           "default": false
         }
       ]
+    },
+    {
+      "type": "combo",
+      "name": "Combo contents",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Lists the products inside this combo. Fill the product's \"Combo products\" metafield (custom.combo_products) to populate it. Hidden automatically on products with no combo items."
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "What's in this combo"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_item_price",
+          "label": "Show each item's price",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_savings",
+          "label": "Show combo savings vs buying separately",
+          "default": true
+        }
+      ]
     }
   ],
   "presets": [
     {
       "name": "Product",
       "blocks": [
+        { "type": "combo" },
         { "type": "description" },
         {
           "type": "collapsible",

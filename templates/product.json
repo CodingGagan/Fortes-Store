@@ -11,6 +11,29 @@
   "sections": {
     "main": {
       "type": "product",
+      "blocks": {
+        "combo": {
+          "type": "combo",
+          "settings": {}
+        },
+        "description": {
+          "type": "description",
+          "settings": {}
+        },
+        "fabric": {
+          "type": "collapsible",
+          "settings": { "heading": "Fabric & Care" }
+        },
+        "shipping": {
+          "type": "collapsible",
+          "settings": { "heading": "Shipping & Returns" }
+        },
+        "fit": {
+          "type": "collapsible",
+          "settings": { "heading": "Fit & Sizing" }
+        }
+      },
+      "block_order": ["combo", "description", "fabric", "shipping", "fit"],
       "settings": {}
     }
   },
