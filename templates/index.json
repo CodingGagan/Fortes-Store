@@ -49,9 +49,10 @@
     "feature-2": {
       "type": "feature-split",
       "settings": {
+        "image": "shopify://shop_images/WhatsApp_Image_2026-07-20_at_21.13.43.jpg",
         "image_asset": "feature-9006.jpg",
         "heading": "India's Secret",
-        "heading_color": "#f4f1e9",
+        "heading_color": "#D6B7B1",
         "background_color": "",
         "image_side": "left",
         "image_height": 85,
