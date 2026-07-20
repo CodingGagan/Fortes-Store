@@ -70,6 +70,7 @@
     },
     "banner": {
       "type": "feature-banner",
+      "disabled": true,
       "settings": {
         "image_asset": "hero-main.jpg",
         "heading": "Plain. Simple.",
