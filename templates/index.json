@@ -12,9 +12,16 @@
     "hero": {
       "type": "hero",
       "settings": {
-        "heading": "Stripes!",
+        "heading": "BE THE CHANGE",
+        "image": "shopify://shop_images/hero-image.jpg",
         "image_asset": "hero-main.jpg",
-        "button_label": "New in Shop"
+        "text_color": "#FFFFFF",
+        "content_position": "center",
+        "content_alignment": "center",
+        "image_height": 90,
+        "product": "",
+        "button_label": "- BE THE CHANGE",
+        "button_url": "shopify://collections"
       }
     },
     "feature-1": {
@@ -22,8 +29,20 @@
       "settings": {
         "image_asset": "feature-9012.jpg",
         "heading": "New at Home",
+        "heading_color": "#f4f1e9",
+        "background_color": "",
         "image_side": "left",
-        "button_label": "Shop now"
+        "image_height": 85,
+        "show_gradient": true,
+        "gradient_color": "#4d4631",
+        "gradient_height": 45,
+        "product": "",
+        "button_label": "Shop now",
+        "button_url": "",
+        "button_style": "outline",
+        "button_offset": 14,
+        "button_background_color": "",
+        "button_text_color": ""
       }
     },
     "feature-2": {
@@ -31,8 +50,20 @@
       "settings": {
         "image_asset": "feature-9006.jpg",
         "heading": "India's Secret",
+        "heading_color": "#f4f1e9",
+        "background_color": "",
         "image_side": "left",
-        "button_label": "Shop now"
+        "image_height": 85,
+        "show_gradient": true,
+        "gradient_color": "#4d4631",
+        "gradient_height": 45,
+        "product": "",
+        "button_label": "Shop now",
+        "button_url": "",
+        "button_style": "outline",
+        "button_offset": 14,
+        "button_background_color": "",
+        "button_text_color": ""
       }
     },
     "banner": {
@@ -40,8 +71,12 @@
       "settings": {
         "image_asset": "hero-main.jpg",
         "heading": "Plain. Simple.",
+        "text_color": "#ffffff",
         "content_position": "top",
-        "button_label": "The March Tee"
+        "image_height": 90,
+        "product": "",
+        "button_label": "The March Tee",
+        "button_url": ""
       }
     },
     "feature-3": {
@@ -49,8 +84,20 @@
       "settings": {
         "image_asset": "feature-9012.jpg",
         "heading": "Familiar.",
+        "heading_color": "#f4f1e9",
+        "background_color": "",
         "image_side": "left",
-        "button_label": "Shop now"
+        "image_height": 85,
+        "show_gradient": true,
+        "gradient_color": "#4d4631",
+        "gradient_height": 45,
+        "product": "",
+        "button_label": "Shop now",
+        "button_url": "",
+        "button_style": "outline",
+        "button_offset": 14,
+        "button_background_color": "",
+        "button_text_color": ""
       }
     },
     "feature-4": {
@@ -58,8 +105,20 @@
       "settings": {
         "image_asset": "feature-9006.jpg",
         "heading": "Multiple lengths.",
+        "heading_color": "#f4f1e9",
+        "background_color": "",
         "image_side": "left",
-        "button_label": "Shop now"
+        "image_height": 85,
+        "show_gradient": true,
+        "gradient_color": "#4d4631",
+        "gradient_height": 45,
+        "product": "",
+        "button_label": "Shop now",
+        "button_url": "",
+        "button_style": "outline",
+        "button_offset": 14,
+        "button_background_color": "",
+        "button_text_color": ""
       }
     }
   },
