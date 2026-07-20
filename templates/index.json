@@ -84,6 +84,7 @@
     "feature-3": {
       "type": "feature-split",
       "settings": {
+        "image": "shopify://shop_images/WhatsApp_Image_2026-07-20_at_21.14.51.jpg",
         "image_asset": "feature-9012.jpg",
         "heading": "Familiar.",
         "heading_color": "#f4f1e9",
@@ -105,6 +106,7 @@
     "feature-4": {
       "type": "feature-split",
       "settings": {
+        "image": "shopify://shop_images/WhatsApp_Image_2026-07-20_at_21.14.51_1.jpg",
         "image_asset": "feature-9006.jpg",
         "heading": "Multiple lengths.",
         "heading_color": "#f4f1e9",
@@ -113,7 +115,7 @@
         "image_height": 85,
         "show_gradient": true,
         "gradient_color": "#4d4631",
-        "gradient_height": 45,
+        "gradient_height": 65,
         "product": "",
         "button_label": "Shop now",
         "button_url": "",
