@@ -1,0 +1,3 @@
+[environments.development]
+store = "fortes.store.myshopify.com"
+theme_id = "158064181479"

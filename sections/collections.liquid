@@ -1,83 +1,232 @@
 {% comment %}
-  This section is used in the list-collections template to render a list of
-  collections.
+  List-collections page.
+
+  Renders every collection as a card that mirrors the product-card look from
+  sections/collection.liquid (rounded 3:4 media box, hover zoom, heading-font
+  title, muted description) so the /collections page matches /collections/all.
+
+  Classes are namespaced (.clist / .ccard) because Shopify concatenates all
+  section stylesheets into one global bundle — reusing .card/.grid here would
+  clobber the collection page's product cards.
 
   https://shopify.dev/docs/storefronts/themes/architecture/templates/collection
 {% endcomment %}
 
-<h1>{{ 'collections.title' | t }}</h1>
+{%- liquid
+  assign heading = section.settings.heading
+  if heading == blank
+    assign heading = 'collections.title' | t
+  endif
+-%}
 
 <div
-  class="collections {{ section.settings.grid_item_width }}"
-  style="--grid-gap: {{ section.settings.grid_gap }}px"
+  class="clist"
+  style="--col-columns: {{ section.settings.columns }};"
 >
-  {% for collection in collections %}
-    <a class="collection-card" href="{{ collection.url }}">
-      {% if collection.featured_image %}
-        {% render 'image',
-          class: 'collection-card__image',
-          image: collection.featured_image,
-          width: 600,
-          height: 600,
-          crop: 'center'
-        %}
-      {% endif %}
+  {%- if section.settings.show_title -%}
+    <div class="clist__header">
+      <h1 class="clist__title">{{ heading }}</h1>
+      {%- if section.settings.subheading != blank -%}
+        <div class="clist__desc rte">{{ section.settings.subheading }}</div>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
 
-      <div class="collection-card__content">
-        <p>{{ collection.title }}</p>
+  {%- if collections.size == 0 -%}
+    <p class="clist__empty">No collections yet.</p>
+  {%- else -%}
+    <ul class="clist__grid" role="list">
+      {%- for collection in collections -%}
+        <li class="ccard">
+          <a href="{{ collection.url }}" class="ccard__link" aria-label="{{ collection.title | escape }}">
+            <div class="ccard__media">
+              {%- if collection.featured_image -%}
+                {{
+                  collection.featured_image
+                  | image_url: width: 800
+                  | image_tag:
+                    widths: '200, 300, 400, 600, 800',
+                    sizes: '(max-width: 560px) 50vw, (max-width: 1100px) 33vw, 25vw',
+                    class: 'ccard__image',
+                    loading: 'lazy',
+                    alt: collection.featured_image.alt | default: collection.title
+                }}
+              {%- else -%}
+                {{ 'collection-1' | placeholder_svg_tag: 'ccard__image ccard__image--placeholder' }}
+              {%- endif -%}
+            </div>
 
-        {% if collection.description %}
-          <p>{{ collection.description | strip_html | truncatewords: 15 }}</p>
-        {% endif %}
-      </div>
-    </a>
-  {% endfor %}
+            <div class="ccard__info">
+              <h3 class="ccard__title">{{ collection.title }}</h3>
+              {%- if collection.description != blank -%}
+                <p class="ccard__desc">{{ collection.description | strip_html | truncatewords: 15 }}</p>
+              {%- endif -%}
+              {%- if section.settings.show_count -%}
+                <p class="ccard__count">{{ collection.all_products_count }} products</p>
+              {%- endif -%}
+            </div>
+          </a>
+        </li>
+      {%- endfor -%}
+    </ul>
+  {%- endif -%}
 </div>
 
 {% stylesheet %}
-  .collections {
+  .clist {
+    --col-paper: #f1efe9;
+    --col-muted: #8c867c;
+    --col-line: #e4e1d9;
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: clamp(1.25rem, 3vw, 2rem) var(--page-margin) 4rem;
+  }
+
+  /* ===== HEADER / TITLE ===== */
+  .clist__header {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .clist__title {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    margin: 0 0 0.5rem;
+  }
+
+  .clist__desc {
+    color: var(--col-muted);
+    max-width: 60ch;
+    margin: 0 auto;
+  }
+
+  /* ===== GRID ===== */
+  .clist__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(var(--collection-card-size), 100%), 1fr));
-    gap: var(--grid-gap);
+    grid-template-columns: repeat(var(--col-columns, 3), 1fr);
+    gap: clamp(1rem, 2vw, 1.8rem);
   }
-  .collections--compact {
-    --collection-card-size: 160px;
+
+  .ccard {
+    position: relative;
   }
-  .collections--full {
-    --collection-card-size: 280px;
+
+  .ccard__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
   }
-  .collection-card {
-    display: flex;
-    flex-direction: column;
+
+  .ccard__media {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--col-paper);
+    aspect-ratio: 3 / 4;
+  }
+
+  .ccard__image {
     width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .ccard:hover .ccard__image {
+    transform: scale(1.04);
+  }
+
+  .ccard__image--placeholder {
+    background: var(--col-paper);
+    fill: color-mix(in srgb, var(--color-foreground) 15%, transparent);
+  }
+
+  .ccard__info {
+    padding: 0.85rem 0.1rem 0;
+  }
+
+  .ccard__title {
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: 1.15rem;
+    line-height: 1.2;
+    margin: 0 0 0.25rem;
+  }
+
+  .ccard__desc {
+    font-size: 0.82rem;
+    color: var(--col-muted);
+    line-height: 1.45;
+    margin: 0;
+  }
+
+  .ccard__count {
+    font-size: 0.78rem;
+    color: var(--col-muted);
+    margin: 0.4rem 0 0;
+  }
+
+  .clist__empty {
+    text-align: center;
+    color: var(--col-muted);
+    padding: 3rem 0;
+  }
+
+  @media (max-width: 1100px) {
+    .clist__grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .clist__grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
   }
 {% endstylesheet %}
 
 {% schema %}
 {
-  "name": "t:general.collections_grid",
+  "name": "Collections list",
   "settings": [
     {
-      "type": "select",
-      "id": "grid_item_width",
-      "label": "t:labels.grid_item_width",
-      "options": [
-        { "value": "collections--compact", "label": "t:options.size.small" },
-        { "value": "collections--full", "label": "t:options.size.large" }
-      ],
-      "default": "collections--full"
+      "type": "checkbox",
+      "id": "show_title",
+      "label": "Show page title",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "info": "Leave blank to use the default “Collections” label."
+    },
+    {
+      "type": "richtext",
+      "id": "subheading",
+      "label": "Subheading"
     },
     {
       "type": "range",
-      "id": "grid_gap",
-      "label": "t:labels.grid_gap",
-      "min": 0,
-      "max": 50,
-      "step": 5,
-      "unit": "px",
-      "default": 10
+      "id": "columns",
+      "min": 2,
+      "max": 5,
+      "step": 1,
+      "label": "Columns (desktop)",
+      "default": 3
+    },
+    {
+      "type": "checkbox",
+      "id": "show_count",
+      "label": "Show product count",
+      "default": false
     }
   ],
-  "presets": [{ "name": "t:general.collections_grid" }]
+  "presets": [{ "name": "Collections list" }]
 }
 {% endschema %}

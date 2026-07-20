@@ -26,6 +26,20 @@
   endif
   assign rating = product.metafields.reviews.rating.value
   assign rating_count = product.metafields.reviews.rating_count.value | default: 0
+
+  # Identify the colour option so the gallery can be filtered per colour.
+  assign color_option = null
+  for option in product.options_with_values
+    assign odc = option.name | downcase
+    if odc == color_name or odc contains 'color' or odc contains 'colour'
+      assign color_option = option
+      break
+    endif
+  endfor
+  if color_option
+    assign color_index = color_option.position | minus: 1
+    assign current_color = current_variant.options[color_index] | downcase
+  endif
 -%}
 
 <div class="pdp-page full-width">
@@ -47,11 +61,36 @@
       {%- if product.media.size > 1 -%}
         <div class="gallery__thumbs" role="list">
           {%- for media in product.media -%}
+            {%- liquid
+              # Tag each media with the colour it belongs to, so the gallery can
+              # be filtered on colour selection. Prefer Shopify's variant→image
+              # association; fall back to matching the colour name in the alt text.
+              assign media_color = ''
+              if color_option
+                for v in product.variants
+                  if v.featured_media.id == media.id
+                    assign media_color = v.options[color_index]
+                    break
+                  endif
+                endfor
+                if media_color == blank
+                  assign alt_dc = media.alt | downcase
+                  for cval in color_option.values
+                    assign cval_dc = cval | downcase
+                    if alt_dc contains cval_dc
+                      assign media_color = cval
+                      break
+                    endif
+                  endfor
+                endif
+              endif
+            -%}
             <button
               type="button"
               class="gallery__thumb{% if forloop.first %} is-on{% endif %}"
               data-media-id="{{ media.id }}"
               data-src="{{ media.preview_image | image_url: width: 1200 }}"
+              {% if media_color != blank %}data-color="{{ media_color | downcase | escape }}"{% endif %}
               aria-label="View image {{ forloop.index }}"
             >
               {{
@@ -135,7 +174,7 @@
               {%- assign is_color = true -%}
             {%- endif -%}
 
-            <div class="opt" data-option-index="{{ option.position }}">
+            <div class="opt" data-option-index="{{ option.position }}"{% if is_color %} data-color-option{% endif %}>
               <div class="opt__label">
                 {{ option.name }}
                 {%- if is_color %}: <span data-option-selected="{{ option.position }}">{{ option.selected_value }}</span>{% endif -%}
@@ -146,11 +185,47 @@
 
               {%- if is_color -%}
                 <div class="swatches">
+                  {%- assign swatch_map = section.settings.color_swatch_map | newline_to_br | split: '<br />' -%}
                   {%- for value in option.values -%}
+                    {%- liquid
+                      # Resolve a fill for the colour dot, in priority order:
+                      #  1. Shopify's native swatch (Admin › option value)
+                      #  2. merchant name→colour map (section setting)
+                      #  3. the colour name used directly as a CSS colour
+                      #     (e.g. "Dark Green" → darkgreen); invalid names fall
+                      #     back to the .swatch base colour via CSS.
+                      assign sw_style = ''
+                      if value.swatch.color
+                        assign sw_style = 'background: ' | append: value.swatch.color | append: ';'
+                      elsif value.swatch.image
+                        assign sw_img = value.swatch.image | image_url: width: 80
+                        assign sw_style = 'background-image: url(' | append: sw_img | append: ');'
+                      else
+                        assign vname = value | downcase | strip
+                        assign mapped = ''
+                        for line in swatch_map
+                          assign kv = line | split: ':'
+                          if kv.size < 2
+                            continue
+                          endif
+                          assign k = kv[0] | downcase | strip
+                          if k == vname
+                            assign mapped = kv[1] | strip
+                            break
+                          endif
+                        endfor
+                        if mapped != blank
+                          assign sw_style = 'background: ' | append: mapped | append: ';'
+                        else
+                          assign css_name = vname | replace: ' ', '' | replace: '-', ''
+                          assign sw_style = 'background: ' | append: css_name | append: ';'
+                        endif
+                      endif
+                    -%}
                     <label
                       class="swatch{% if value.selected %} is-on{% endif %}"
                       title="{{ value | escape }}"
-                      style="{% if value.swatch.color %}background: {{ value.swatch.color }};{% elsif value.swatch.image %}background-image: url({{ value.swatch.image | image_url: width: 80 }});{% else %}background: #d8d5cd;{% endif %}"
+                      style="{{ sw_style }}"
                     >
                       <input
                         type="radio"
@@ -383,13 +458,47 @@
 
     var variants = [];
     var meta = {};
+    // Parse each block on its own so a fault in the (hand-built) meta block
+    // can't also wipe out the variants array, and vice-versa.
     try {
       var variantsEl = document.getElementById('VariantsJson-{{ section.id }}');
-      var metaEl = document.getElementById('VariantMeta-{{ section.id }}');
       if (variantsEl) variants = JSON.parse(variantsEl.textContent) || [];
+    } catch (err) { /* selection + quantity still work below */ }
+    try {
+      var metaEl = document.getElementById('VariantMeta-{{ section.id }}');
       if (metaEl) meta = JSON.parse(metaEl.textContent) || {};
-    } catch (err) {
-      /* Data unavailable — selection + quantity still work below. */
+    } catch (err) { /* meta only feeds the image swap now; prices come from variants */ }
+
+    // Client-side money formatting from the shop format, so price/compare/ATC
+    // are derived from the always-valid variants array (price in cents) and
+    // never depend on the fragile meta block.
+    var moneyFormat = {{ shop.money_format | json }};
+    function formatMoney(cents, format) {
+      format = format || '${{amount}}';
+      if (cents == null || isNaN(cents)) return '';
+      var placeholder = /\{\{\s*(\w+)\s*\}\}/;
+      function withDelimiters(number, precision, thousands, decimal) {
+        precision = precision == null ? 2 : precision;
+        thousands = thousands == null ? ',' : thousands;
+        decimal = decimal == null ? '.' : decimal;
+        number = (number / 100).toFixed(precision);
+        var parts = number.split('.');
+        var dollars = parts[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, '$1' + thousands);
+        var frac = parts[1] ? decimal + parts[1] : '';
+        return dollars + frac;
+      }
+      var value = '';
+      var match = format.match(placeholder);
+      switch (match ? match[1] : 'amount') {
+        case 'amount': value = withDelimiters(cents, 2); break;
+        case 'amount_no_decimals': value = withDelimiters(cents, 0); break;
+        case 'amount_with_comma_separator': value = withDelimiters(cents, 2, '.', ','); break;
+        case 'amount_no_decimals_with_comma_separator': value = withDelimiters(cents, 0, '.', ','); break;
+        case 'amount_with_space_separator': value = withDelimiters(cents, 2, ' ', '.'); break;
+        case 'amount_with_apostrophe_separator': value = withDelimiters(cents, 2, "'", '.'); break;
+        default: value = withDelimiters(cents, 2);
+      }
+      return format.replace(placeholder, value);
     }
 
     var idInput = root.querySelector('[data-variant-id]');
@@ -462,31 +571,52 @@
 
       var m = meta[variant.id] || {};
       idInput.value = variant.id;
-      if (priceEl) priceEl.textContent = m.priceMoney;
-      if (skuEl) skuEl.textContent = m.sku || '';
 
-      var hasCompare = m.compare && m.compare > m.price;
-      if (compareEl) { compareEl.hidden = !hasCompare; compareEl.textContent = m.compareMoney; }
+      // Prices/sku come straight from the variant (always-valid Shopify JSON),
+      // formatted client-side — never from the fragile meta block.
+      var price = variant.price;
+      var compare = variant.compare_at_price;
+      var priceMoney = formatMoney(price, moneyFormat);
+
+      if (priceEl) priceEl.textContent = priceMoney;
+      if (skuEl) skuEl.textContent = variant.sku || '';
+
+      var hasCompare = compare && compare > price;
+      if (compareEl) { compareEl.hidden = !hasCompare; compareEl.textContent = hasCompare ? formatMoney(compare, moneyFormat) : ''; }
       if (discountEl) {
         discountEl.hidden = !hasCompare;
-        if (hasCompare) discountEl.textContent = '−' + Math.round((m.compare - m.price) * 100 / m.compare) + '%';
+        if (hasCompare) discountEl.textContent = '−' + Math.round((compare - price) * 100 / compare) + '%';
       }
       if (saveTag) {
         saveTag.hidden = !hasCompare;
-        if (hasCompare) saveTag.textContent = 'Save ' + Math.round((m.compare - m.price) * 100 / m.compare) + '%';
+        if (hasCompare) saveTag.textContent = 'Save ' + Math.round((compare - price) * 100 / compare) + '%';
       }
 
       if (variant.available) {
         atc.disabled = false;
-        atcText.innerHTML = 'Add to cart · <span data-atc-price>' + m.priceMoney + '</span>';
+        atcText.innerHTML = 'Add to cart · <span data-atc-price>' + priceMoney + '</span>';
       } else {
         atc.disabled = true;
         atcText.textContent = 'Sold out';
       }
 
-      // Swap main image to the variant's featured media.
-      if (mainImg && m.mediaSrc) {
-        setMainImage(m.mediaSrc, m.mediaId);
+      // Gallery follows the colour. When the product has a colour option we
+      // filter the thumbnails to that colour and show its first image; the
+      // filter only re-runs when the colour actually changes, so picking a
+      // size never disturbs the image the shopper is looking at. Products
+      // without a colour option keep the simple per-variant image swap.
+      if (colorOptionEl) {
+        var color = selectedColor();
+        if (color !== lastColor) {
+          lastColor = color;
+          filterGalleryByColor(color);
+        }
+      } else if (mainImg) {
+        if (m.mediaSrc) {
+          setMainImage(m.mediaSrc, m.mediaId);
+        } else if (variant.featured_image && variant.featured_image.src) {
+          setMainImage(variant.featured_image.src, variant.featured_image.id);
+        }
       }
     }
 
@@ -497,6 +627,52 @@
       root.querySelectorAll('.gallery__thumb').forEach(function (t) {
         t.classList.toggle('is-on', mediaId && +t.dataset.mediaId === +mediaId);
       });
+    }
+
+    // ===== Colour-driven gallery =====
+    var colorOptionEl = root.querySelector('[data-color-option]');
+    var lastColor = null;
+
+    function selectedColor() {
+      if (!colorOptionEl) return null;
+      var checked = colorOptionEl.querySelector('input:checked');
+      return checked ? checked.value.toLowerCase() : null;
+    }
+
+    // Make a thumbnail the active/main image.
+    function activateThumb(thumb) {
+      if (!thumb) return;
+      root.querySelectorAll('.gallery__thumb').forEach(function (t) { t.classList.remove('is-on'); });
+      thumb.classList.add('is-on');
+      if (mainImg && thumb.dataset.src) {
+        mainImg.src = thumb.dataset.src;
+        mainImg.removeAttribute('srcset');
+      }
+    }
+
+    // Show only the thumbnails belonging to the given colour (plus any untagged
+    // shared shots) and promote that colour's first image to the main view.
+    function filterGalleryByColor(color) {
+      var thumbs = root.querySelectorAll('.gallery__thumb');
+      if (!thumbs.length) return;
+
+      var hasMatch = false;
+      thumbs.forEach(function (t) { if ((t.dataset.color || '') === color) hasMatch = true; });
+
+      var firstColorThumb = null, firstVisible = null;
+      thumbs.forEach(function (t) {
+        var c = t.dataset.color || '';
+        // Only hide thumbs tagged to a *different* colour; keep untagged ones.
+        var hide = hasMatch && c && c !== color;
+        t.hidden = hide;
+        if (!hide) {
+          if (!firstVisible) firstVisible = t;
+          if (c === color && !firstColorThumb) firstColorThumb = t;
+        }
+      });
+
+      var target = firstColorThumb || (hasMatch ? firstVisible : null);
+      if (target) activateThumb(target);
     }
 
     optionInputs.forEach(function (input) {
@@ -512,12 +688,12 @@
 
     // Thumbnail rail.
     root.querySelectorAll('.gallery__thumb').forEach(function (thumb) {
-      thumb.addEventListener('click', function () {
-        root.querySelectorAll('.gallery__thumb').forEach(function (t) { t.classList.remove('is-on'); });
-        thumb.classList.add('is-on');
-        if (mainImg) { mainImg.src = thumb.dataset.src; mainImg.removeAttribute('srcset'); }
-      });
+      thumb.addEventListener('click', function () { activateThumb(thumb); });
     });
+
+    // Filter to the initially-selected colour on load.
+    lastColor = selectedColor();
+    filterGalleryByColor(lastColor);
 
     // Quantity stepper.
     var qtyInput = root.querySelector('[data-qty-input]');
@@ -610,6 +786,10 @@
 
   .gallery__thumb.is-on {
     border-color: var(--col-ink, #1c1c1c);
+  }
+
+  .gallery__thumb[hidden] {
+    display: none;
   }
 
   .gallery__thumb img {
@@ -772,6 +952,9 @@
     border: 1px solid rgba(0, 0, 0, 0.15);
     cursor: pointer;
     position: relative;
+    /* Base fill: shows through when an inline colour is absent or an
+       unrecognised colour name gets dropped by the browser. */
+    background: #d8d5cd;
     background-size: cover;
   }
 
@@ -1212,6 +1395,13 @@
       "label": "Colour option name",
       "info": "Which product option renders as colour swatches.",
       "default": "Color"
+    },
+    {
+      "type": "textarea",
+      "id": "color_swatch_map",
+      "label": "Colour swatch map",
+      "info": "One per line as “name: colour”, e.g. wine: #722f37. Used when a colour has no native Shopify swatch. Names not listed fall back to matching CSS colour names (Dark Green → darkgreen).",
+      "default": "wine: #722f37\nburgundy: #6d071a\nmaroon: #7b1e2b\nmustard: #d5a021\nsand: #d7c9a8\ncharcoal: #36454f\ncream: #f4f0e6\nrust: #b7410e\nblush: #de8f9a\nsage: #9caf88\nforest: #22402f\ndark green: #14452f\noff white: #f2f0e6"
     },
     {
       "type": "url",
