@@ -1,0 +1,96 @@
+{% comment %}
+  Predictive search results.
+
+  Rendered on demand by assets/search.js via the Section Rendering API:
+    /search/suggest?q=TERM&section_id=predictive-search
+
+  Markup only — the styles live in sections/header.liquid alongside the rest of
+  the search drawer, so they are always present even though this section is only
+  ever fetched over AJAX.
+
+  https://shopify.dev/docs/storefronts/themes/architecture/templates/search
+{% endcomment %}
+
+{%- liquid
+  assign products = predictive_search.resources.products
+  assign collections = predictive_search.resources.collections
+  assign pages = predictive_search.resources.pages
+  assign articles = predictive_search.resources.articles
+  assign total = products.size | plus: collections.size | plus: pages.size | plus: articles.size
+-%}
+
+{%- if predictive_search.performed -%}
+  {%- if total == 0 -%}
+    <p class="psearch__empty">
+      No results for “{{ predictive_search.terms }}”. Try a different spelling or a broader term.
+    </p>
+  {%- else -%}
+    <div class="psearch">
+      {%- if products.size > 0 -%}
+        <div class="psearch__group">
+          <p class="psearch__label">Products</p>
+          <ul class="psearch__list" role="list">
+            {%- for product in products -%}
+              <li>
+                <a class="psearch__item" href="{{ product.url }}">
+                  <span class="psearch__media">
+                    {%- if product.featured_media -%}
+                      {{
+                        product.featured_media
+                        | image_url: width: 160
+                        | image_tag:
+                          widths: '80, 160',
+                          loading: 'lazy',
+                          class: 'psearch__img',
+                          alt: product.featured_media.alt | default: product.title
+                      }}
+                    {%- endif -%}
+                  </span>
+                  <span class="psearch__info">
+                    <span class="psearch__title">{{ product.title }}</span>
+                    <span class="psearch__price">
+                      {%- if product.price_varies -%}
+                        From {{ product.price_min | money }}
+                      {%- else -%}
+                        {{ product.price | money }}
+                      {%- endif -%}
+                    </span>
+                  </span>
+                </a>
+              </li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
+
+      {%- if collections.size > 0 -%}
+        <div class="psearch__group">
+          <p class="psearch__label">Collections</p>
+          <ul class="psearch__list psearch__list--plain" role="list">
+            {%- for collection in collections -%}
+              <li><a class="psearch__link" href="{{ collection.url }}">{{ collection.title }}</a></li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
+
+      {%- if pages.size > 0 or articles.size > 0 -%}
+        <div class="psearch__group">
+          <p class="psearch__label">Pages &amp; journal</p>
+          <ul class="psearch__list psearch__list--plain" role="list">
+            {%- for page in pages -%}
+              <li><a class="psearch__link" href="{{ page.url }}">{{ page.title }}</a></li>
+            {%- endfor -%}
+            {%- for article in articles -%}
+              <li><a class="psearch__link" href="{{ article.url }}">{{ article.title }}</a></li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
+
+      <a class="psearch__all" href="{{ routes.search_url }}?q={{ predictive_search.terms | url_encode }}">
+        View all results for “{{ predictive_search.terms }}”
+      </a>
+    </div>
+  {%- endif -%}
+{%- endif -%}

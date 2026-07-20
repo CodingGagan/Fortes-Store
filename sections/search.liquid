@@ -1,64 +1,329 @@
 {% comment %}
-  This section is used in the search template to render search results for
-  products, articles, and pages.
+  Search results page (products, articles and pages).
+
+  Styled to match the collection grid so results read as the same component.
+  The header search drawer (sections/header.liquid + assets/search.js) handles
+  predictive suggestions; this page is the full result set.
 
   https://shopify.dev/docs/storefronts/themes/architecture/templates/search
 {% endcomment %}
 
-<h1>{{ 'search.title' | t }}</h1>
+<div class="srch">
+  <div class="srch__header">
+    <h1 class="srch__title">{{ 'search.title' | t }}</h1>
 
-<form action="{{ routes.search_url }}" method="get" role="search">
-  <input
-    type="search"
-    size="50"
-    name="q"
-    value="{{ search.terms | escape }}"
-    placeholder="{{ 'search.placeholder' | t }}"
-  >
-  <button type="submit">{{ 'search.submit' | t }}</button>
-</form>
+    <form action="{{ routes.search_url }}" method="get" role="search" class="srch__form">
+      <span class="srch__icon" aria-hidden="true">
+        {{ 'icon-search.svg' | inline_asset_content }}
+      </span>
+      <input
+        type="search"
+        name="q"
+        value="{{ search.terms | escape }}"
+        placeholder="{{ 'search.placeholder' | t }}"
+        aria-label="{{ 'search.placeholder' | t }}"
+        autocomplete="off"
+        class="srch__input"
+      >
+      <button type="submit" class="srch__submit">{{ 'search.submit' | t }}</button>
+    </form>
 
-{% if search.performed %}
-  {% if search.results_count == 0 %}
-    <p>{{ 'search.no_results_html' | t: terms: search.terms }}</p>
-  {% else %}
-    <p>{{ 'search.results_for_html' | t: terms: search.terms, count: search.results_count }}</p>
+    {%- if search.performed -%}
+      <p class="srch__count">
+        {%- if search.results_count == 0 -%}
+          No results for “{{ search.terms }}”. Try a different spelling or a broader term.
+        {%- else -%}
+          {{ search.results_count }} result{% if search.results_count != 1 %}s{% endif %} for “{{ search.terms }}”
+        {%- endif -%}
+      </p>
+    {%- endif -%}
+  </div>
 
-    <div class="search-results">
-      {% paginate search.results by 20 %}
-        {% # Search result items may be an article, a page, or a product. %}
-        {% for result in search.results %}
-          <div class="search-result">
-            {% assign featured_image = result.featured_image | default: result.image %}
-            {% if featured_image %}
-              {% render 'image', class: 'search-result__image', image: featured_image, url: result.url, width: 400 %}
-            {% endif %}
-            <div class="search-result__content">
-              <p>
-                {{ result.title | link_to: result.url }}
-                {% if result.price %}
-                  {{ result.price | money_with_currency }}
-                {% endif %}
-              </p>
-            </div>
-          </div>
-        {% endfor %}
+  {%- if search.performed and search.results_count > 0 -%}
+    {%- paginate search.results by 24 -%}
+      <ul class="srch__grid" role="list">
+        {%- for result in search.results -%}
+          <li class="srch__card">
+            <a class="srch__link" href="{{ result.url }}">
+              <div class="srch__media">
+                {%- assign result_image = result.featured_media | default: result.image -%}
+                {%- if result_image -%}
+                  {{
+                    result_image
+                    | image_url: width: 600
+                    | image_tag:
+                      widths: '200, 300, 400, 600',
+                      sizes: '(max-width: 560px) 50vw, (max-width: 1100px) 33vw, 25vw',
+                      loading: 'lazy',
+                      class: 'srch__img',
+                      alt: result.title
+                  }}
+                {%- else -%}
+                  {{ 'product-1' | placeholder_svg_tag: 'srch__img srch__img--placeholder' }}
+                {%- endif -%}
+              </div>
 
-        {{ paginate | default_pagination }}
-      {% endpaginate %}
-    </div>
-  {% endif %}
-{% endif %}
+              <div class="srch__info">
+                <h3 class="srch__name">{{ result.title }}</h3>
+
+                {%- if result.object_type == 'product' -%}
+                  {%- liquid
+                    assign on_sale = false
+                    if result.compare_at_price > result.price
+                      assign on_sale = true
+                    endif
+                  -%}
+                  <p class="srch__price">
+                    {%- if on_sale -%}
+                      {{ result.price | money }}
+                      <span class="was">{{ result.compare_at_price | money }}</span>
+                    {%- elsif result.price_varies -%}
+                      From {{ result.price_min | money }}
+                    {%- else -%}
+                      {{ result.price | money }}
+                    {%- endif -%}
+                  </p>
+                {%- else -%}
+                  <p class="srch__kind">{{ result.object_type | capitalize }}</p>
+                {%- endif -%}
+              </div>
+            </a>
+          </li>
+        {%- endfor -%}
+      </ul>
+
+      {%- if paginate.pages > 1 -%}
+        <nav class="srch__pager" aria-label="Pagination">
+          {%- if paginate.previous -%}
+            <a href="{{ paginate.previous.url }}" aria-label="Previous">‹</a>
+          {%- endif -%}
+          {%- for part in paginate.parts -%}
+            {%- if part.is_link -%}
+              <a href="{{ part.url }}">{{ part.title }}</a>
+            {%- elsif part.title == paginate.current_page -%}
+              <a href="#" class="is-on" aria-current="page">{{ part.title }}</a>
+            {%- else -%}
+              <a class="is-gap">{{ part.title }}</a>
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if paginate.next -%}
+            <a href="{{ paginate.next.url }}" aria-label="Next">›</a>
+          {%- endif -%}
+        </nav>
+      {%- endif -%}
+    {%- endpaginate -%}
+  {%- endif -%}
+</div>
 
 {% stylesheet %}
-  .search-results {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  .srch {
+    --col-paper: #f1efe9;
+    --col-muted: #8c867c;
+    --col-line: #e4e1d9;
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: clamp(1.25rem, 3vw, 2rem) var(--page-margin) 4rem;
   }
-  .search-results .prev,
-  .search-results .page,
-  .search-results .next {
-    grid-column: 1 / -1;
+
+  .srch__header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .srch__title {
+    font-family: var(--font-heading--family);
+    font-weight: var(--font-heading--weight);
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    margin: 0 0 1.2rem;
+  }
+
+  .srch__form {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 620px;
+    margin: 0 auto;
+    border: 1px solid var(--col-line);
+    border-radius: 999px;
+    padding: 0.5rem 0.5rem 0.5rem 1.1rem;
+    transition: border-color 0.15s ease;
+  }
+
+  .srch__form:focus-within {
+    border-color: var(--color-foreground);
+  }
+
+  .srch__icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    color: var(--col-muted);
+  }
+
+  .srch__icon svg {
+    width: 1.15rem;
+    height: auto;
+  }
+
+  .srch__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: none;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    color: var(--color-foreground);
+  }
+
+  .srch__input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .srch__submit {
+    flex: 0 0 auto;
+    border: 0;
+    border-radius: 999px;
+    background: var(--color-foreground);
+    color: var(--color-background, #fff);
+    font-family: var(--font-body);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.65rem 1.4rem;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  .srch__submit:hover {
+    opacity: 0.85;
+  }
+
+  .srch__count {
+    font-size: 0.88rem;
+    color: var(--col-muted);
+    margin: 1.1rem 0 0;
+  }
+
+  .srch__grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(1rem, 2vw, 1.8rem);
+  }
+
+  .srch__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .srch__media {
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--col-paper);
+    aspect-ratio: 3 / 4;
+  }
+
+  .srch__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .srch__card:hover .srch__img {
+    transform: scale(1.04);
+  }
+
+  .srch__img--placeholder {
+    background: var(--col-paper);
+    fill: color-mix(in srgb, var(--color-foreground) 15%, transparent);
+  }
+
+  .srch__info {
+    padding: 0.85rem 0.1rem 0;
+  }
+
+  .srch__name {
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: 1.15rem;
+    line-height: 1.2;
+    margin: 0 0 0.25rem;
+  }
+
+  .srch__price {
+    font-family: var(--font-body);
+    font-size: 0.92rem;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .srch__price .was {
+    color: var(--col-muted);
+    font-weight: 400;
+    text-decoration: line-through;
+    margin-left: 0.4rem;
+    font-size: 0.85rem;
+  }
+
+  .srch__kind {
+    font-size: 0.78rem;
+    color: var(--col-muted);
+    margin: 0;
+  }
+
+  .srch__pager {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 3rem;
+  }
+
+  .srch__pager a {
+    min-width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid var(--col-line);
+    background: var(--color-background);
+    color: var(--color-foreground);
+    text-decoration: none;
+    font-size: 0.88rem;
+  }
+
+  .srch__pager a.is-gap {
+    border-color: transparent;
+  }
+
+  .srch__pager a.is-on {
+    background: var(--color-foreground);
+    color: var(--color-background);
+    border-color: var(--color-foreground);
+  }
+
+  .srch__pager a:hover:not(.is-on):not(.is-gap) {
+    border-color: var(--color-foreground);
+  }
+
+  @media (max-width: 1100px) {
+    .srch__grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .srch__grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
   }
 {% endstylesheet %}
 

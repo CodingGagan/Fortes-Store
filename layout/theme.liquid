@@ -42,7 +42,9 @@
         routes: {
           cart_add: {{ routes.cart_add_url | json }},
           cart_change: {{ routes.cart_change_url | json }},
-          cart: {{ routes.cart_url | json }}
+          cart: {{ routes.cart_url | json }},
+          search: {{ routes.search_url | json }},
+          predictive_search: {{ routes.predictive_search_url | json }}
         }
       };
     </script>
@@ -62,5 +64,6 @@
     <script src="{{ 'cart.js' | asset_url }}" defer></script>
     <script src="{{ 'collection.js' | asset_url }}" defer></script>
     <script src="{{ 'nav.js' | asset_url }}" defer></script>
+    <script src="{{ 'search.js' | asset_url }}" defer></script>
   </body>
 </html>
