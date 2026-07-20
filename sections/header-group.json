@@ -15,6 +15,7 @@
       "type": "header",
       "settings": {
         "menu": "main-menu",
+        "nav_feature_logo": "shopify://shop_images/logo-fortes.png",
         "nav_feature_collection": "",
         "customer_account_menu": "customer-account-main-menu"
       }
