@@ -408,6 +408,10 @@
         {%- for rp in related_collection.products -%}
           {%- if rp.id != product.id and shown < 4 -%}
             {%- assign shown = shown | plus: 1 -%}
+            {%- assign rp_on_sale = false -%}
+            {%- if rp.compare_at_price > rp.price -%}
+              {%- assign rp_on_sale = true -%}
+            {%- endif -%}
             <a class="rcard" href="{{ rp.url }}">
               <div class="rcard__media">
                 {%- if rp.featured_media -%}
@@ -420,8 +424,19 @@
                   {{ 'product-1' | placeholder_svg_tag: 'rcard__img' }}
                 {%- endif -%}
               </div>
-              <h3>{{ rp.title }}</h3>
-              <p>{{ rp.price | money }}</p>
+              <div class="rcard__info">
+                <h3 class="rcard__title">{{ rp.title }}</h3>
+                <p class="rcard__price">
+                  {%- if rp_on_sale -%}
+                    {{ rp.price | money }}
+                    <span class="was">{{ rp.compare_at_price | money }}</span>
+                  {%- elsif rp.price_varies -%}
+                    From {{ rp.price_min | money }}
+                  {%- else -%}
+                    {{ rp.price | money }}
+                  {%- endif -%}
+                </p>
+              </div>
             </a>
           {%- endif -%}
         {%- endfor -%}
@@ -1296,6 +1311,14 @@
     gap: clamp(1rem, 2vw, 1.8rem);
   }
 
+  /* Mirrors the product cards on the collection page so "You may also like"
+     reads as the same component (no default link blue/underline). */
+  .rcard {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+  }
+
   .rcard__media {
     border-radius: 10px;
     overflow: hidden;
@@ -1314,17 +1337,31 @@
     transform: scale(1.04);
   }
 
-  .rcard h3 {
-    font-family: var(--font-heading--family);
-    font-weight: var(--font-heading--weight);
-    font-size: 1.05rem;
-    margin: 0.7rem 0 0.2rem;
+  .rcard__info {
+    padding: 0.85rem 0.1rem 0;
   }
 
-  .rcard p {
-    font-size: 0.85rem;
+  .rcard__title {
+    font-family: var(--font-product);
+    font-weight: 400;
+    font-size: 1.15rem;
+    line-height: 1.2;
+    margin: 0 0 0.25rem;
+  }
+
+  .rcard__price {
+    font-family: var(--font-body);
+    font-size: 0.92rem;
     font-weight: 600;
     margin: 0;
+  }
+
+  .rcard__price .was {
+    color: var(--col-muted, #8c867c);
+    font-weight: 400;
+    text-decoration: line-through;
+    margin-left: 0.4rem;
+    font-size: 0.85rem;
   }
 
   .visually-hidden {
