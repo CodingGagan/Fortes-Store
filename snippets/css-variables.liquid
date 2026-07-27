@@ -24,6 +24,9 @@
     --color-button-text: {{ settings.button_text_color }};
     --style-border-radius-inputs: {{ settings.input_corner_radius }}px;
 
+    {% # Fixed header: 6px top bar + the 4.5rem tall header row %}
+    --header-height: calc(4.5rem + 6px);
+
     {% # Google font stacks %}
     --font-display: 'Anton', sans-serif;
     --font-body: 'Montserrat', sans-serif;

@@ -1,4 +1,4 @@
-<header class="header full-width">
+<header class="header full-width" data-header>
   <div class="header__bar"></div>
 
   <div class="header__inner">
@@ -162,13 +162,51 @@
 {% stylesheet %}
   .header {
     --icon-stroke-width: 1.5;
+
+    /* Themeable surface — the overlay rule below swaps these four values. */
+    --header-ink: var(--color-foreground);
+    --header-bg: var(--color-background, #fff);
+    --header-bar: var(--color-foreground);
+    --header-border: rgba(0, 0, 0, 0.08);
+
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* Below the drawers (120/130) and the collection filter panel (99/100). */
+    z-index: 90;
     font-family: var(--font-body);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    color: var(--header-ink);
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--header-border);
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+  }
+
+  /**
+   * When the first section on the page is a full-bleed hero or banner, the
+   * header floats over the artwork with no surface of its own. header.js adds
+   * `.is-scrolled` a little way down the page, which drops it back to the solid
+   * white bar used everywhere else.
+   */
+  body:has(> .shopify-section-group-header-group + .shopify-section > :is(.hero, .banner))
+    .header:not(.is-scrolled) {
+    --header-ink: #fff;
+    --header-bg: transparent;
+    --header-bar: transparent;
+    --header-border: transparent;
+    text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+  }
+
+  /* text-shadow doesn't reach the inline SVGs, so give them their own. */
+  body:has(> .shopify-section-group-header-group + .shopify-section > :is(.hero, .banner))
+    .header:not(.is-scrolled) svg {
+    filter: drop-shadow(0 1px 8px rgba(0, 0, 0, 0.35));
   }
 
   .header__bar {
     height: 6px;
-    background: var(--color-foreground);
+    background: var(--header-bar);
+    transition: background-color 0.3s ease;
   }
 
   .header__inner {
@@ -190,7 +228,7 @@
     border: 0;
     padding: 0;
     background: none;
-    color: var(--color-foreground);
+    color: var(--header-ink);
     text-decoration: none;
     font-family: inherit;
     font-size: 0.95rem;
@@ -206,7 +244,7 @@
   .header__logo {
     justify-self: center;
     text-decoration: none;
-    color: var(--color-foreground);
+    color: var(--header-ink);
   }
 
   .header__wordmark {
@@ -234,7 +272,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    color: var(--color-foreground);
+    color: var(--header-ink);
     text-decoration: none;
     font-size: 0.95rem;
     cursor: pointer;
@@ -503,7 +541,7 @@
   .header__right .header__account,
   .header__cart {
     position: relative;
-    color: var(--color-foreground);
+    color: var(--header-ink);
     display: inline-flex;
     align-items: center;
   }

@@ -76,6 +76,18 @@ body {
   font-family: var(--font-primary--family);
   background-color: var(--color-background);
   color: var(--color-foreground);
+
+  /* The header is fixed, so the page is offset by its height. */
+  padding-top: var(--header-height);
+}
+
+/**
+ * Pages that open with a full-bleed hero or banner keep that offset at zero so
+ * the image starts at the top of the viewport and the header floats over it as
+ * a transparent bar (see `.header` in sections/header.liquid).
+ */
+body:has(> .shopify-section-group-header-group + .shopify-section > :is(.hero, .banner)) {
+  padding-top: 0;
 }
 
 /** Headings use the serif heading font */
