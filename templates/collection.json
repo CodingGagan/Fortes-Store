@@ -11,7 +11,16 @@
   "sections": {
     "main": {
       "type": "collection",
-      "settings": {}
+      "settings": {
+        "category_menu": "",
+        "show_title": false,
+        "show_filters": true,
+        "show_sort": true,
+        "columns": 5,
+        "products_per_page": 24,
+        "color_option_name": "Color",
+        "accent_color": "#5b6b96"
+      }
     }
   },
   "order": [
