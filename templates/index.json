@@ -13,9 +13,9 @@
       "type": "hero",
       "settings": {
         "heading": "BE THE CHANGE",
-        "image": "shopify://shop_images/hero-image.jpg",
+        "image": "shopify://shop_images/1N3A0393_1.jpg",
         "image_asset": "hero-main.jpg",
-        "text_color": "#F4F3F3",
+        "text_color": "#f4f3f3",
         "content_position": "center",
         "content_alignment": "center",
         "image_height": 90,
