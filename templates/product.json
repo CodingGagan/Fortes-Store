@@ -14,27 +14,65 @@
       "blocks": {
         "combo": {
           "type": "combo",
-          "settings": {}
+          "settings": {
+            "heading": "What's in this combo",
+            "show_item_price": true,
+            "show_savings": true
+          }
         },
         "description": {
           "type": "description",
-          "settings": {}
+          "settings": {
+            "heading": "Description",
+            "open": true
+          }
         },
         "fabric": {
           "type": "collapsible",
-          "settings": { "heading": "Fabric & Care" }
+          "settings": {
+            "heading": "Fabric & Care",
+            "content": "",
+            "open": false
+          }
         },
         "shipping": {
           "type": "collapsible",
-          "settings": { "heading": "Shipping & Returns" }
+          "settings": {
+            "heading": "Shipping & Returns",
+            "content": "",
+            "open": false
+          }
         },
         "fit": {
           "type": "collapsible",
-          "settings": { "heading": "Fit & Sizing" }
+          "settings": {
+            "heading": "Fit & Sizing",
+            "content": "",
+            "open": false
+          }
         }
       },
-      "block_order": ["combo", "description", "fabric", "shipping", "fit"],
-      "settings": {}
+      "block_order": [
+        "combo",
+        "description",
+        "fabric",
+        "shipping",
+        "fit"
+      ],
+      "settings": {
+        "show_vendor": true,
+        "show_sku": true,
+        "sticky_gallery": true,
+        "color_option_name": "Color",
+        "color_swatch_map": "wine: #722f37\nburgundy: #6d071a\nmaroon: #7b1e2b\nmustard: #d5a021\nsand: #d7c9a8\ncharcoal: #36454f\ncream: #f4f0e6\nrust: #b7410e\nblush: #de8f9a\nsage: #9caf88\nforest: #22402f\ndark green: #14452f\noff white: #f2f0e6",
+        "size_guide_url": "",
+        "pay_later_text": "Or 3 interest-free payments with your favourite wallet",
+        "trust_1": "Free shipping over ₹1,499",
+        "trust_2": "30-day easy returns",
+        "trust_3": "Secure checkout",
+        "show_related": true,
+        "related_heading": "You may also like"
+      }
     },
     "highlights": {
       "type": "product-highlights",
@@ -42,30 +80,52 @@
         "material": {
           "type": "row",
           "settings": {
-            "heading": "Material",
+            "image": "shopify://shop_images/1N3A8931_3.jpg",
             "image_position": "left",
-            "bullets": "Crafted with rare Suvin cotton.\nBlended with natural bamboo fibres.\nExceptionally fine and durable.\nNaturally breathable.\nPremium luxury fabric."
+            "heading": "Material",
+            "bullets": "Crafted with rare Suvin cotton.\nBlended with natural bamboo fibres.\nExceptionally fine and durable.\nNaturally breathable.\nPremium luxury fabric.",
+            "body": ""
           }
         },
         "badge": {
           "type": "row",
           "settings": {
-            "heading": "The FORTES Quality Badge",
+            "image": "shopify://shop_images/1N3A9153.jpg",
             "image_position": "right",
+            "heading": "The FORTES Quality Badge",
+            "bullets": "",
             "body": "<p>The badge on every sleeve is more than a logo, it's our promise of quality. It represents premium materials, meticulous craftsmanship, and uncompromising attention to detail. When you wear the FORTES badge, you wear a standard built to last.</p>"
           }
         },
         "feel": {
           "type": "row",
           "settings": {
-            "heading": "Feel",
+            "image": "shopify://shop_images/1N3A8993_1.jpg",
             "image_position": "left",
-            "bullets": "Silky soft.\nCool against the skin.\nLightweight comfort.\nBreathable all day.\nSmooth, premium finish."
+            "heading": "Feel",
+            "bullets": "Silky soft.\nCool against the skin.\nLightweight comfort.\nBreathable all day.\nSmooth, premium finish.",
+            "body": ""
           }
         }
       },
-      "block_order": ["material", "badge", "feel"],
-      "settings": {}
+      "block_order": [
+        "material",
+        "badge",
+        "feel"
+      ],
+      "settings": {
+        "heading": "",
+        "panel_color": "#f3f1ec",
+        "eyebrow_color": "#1c1c1c",
+        "text_color": "#4a463f",
+        "divider_color": "#000000",
+        "divider_width": 0,
+        "media_width": 45,
+        "row_height": 80,
+        "media_fade": 45,
+        "statement_size": 40,
+        "badge_height": 56
+      }
     }
   },
   "order": [
