@@ -15,8 +15,8 @@
       "type": "header",
       "settings": {
         "menu": "main-menu",
-        "nav_feature_logo": "shopify://shop_images/logo-fortes.png",
-        "nav_feature_collection": "",
+        "nav_feature_logo": "shopify://shop_images/fortes_logo.jpg",
+        "nav_feature_collection": "t-shirts",
         "customer_account_menu": "customer-account-main-menu"
       }
     }
