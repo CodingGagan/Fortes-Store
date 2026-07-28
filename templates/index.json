@@ -28,10 +28,10 @@
       "type": "feature-split",
       "settings": {
         "width": "half",
-        "image": "shopify://shop_images/WhatsApp_Image_2026-07-20_at_21.21.33.jpg",
+        "image": "shopify://shop_images/1N3A9136_1_ea58315a-81e3-4a9e-8417-e012ed60316e.jpg",
         "image_asset": "feature-9012.jpg",
         "heading": "New at Home",
-        "heading_color": "#b96050",
+        "heading_color": "#F8F8F8",
         "background_color": "",
         "image_side": "left",
         "image_height": 85,
@@ -51,7 +51,6 @@
       "type": "feature-split",
       "settings": {
         "width": "half",
-        "image": "shopify://shop_images/WhatsApp_Image_2026-07-20_at_21.13.43.jpg",
         "image_asset": "feature-9006.jpg",
         "heading": "India's Secret",
         "heading_color": "#d6b7b1",
@@ -88,7 +87,7 @@
       "type": "feature-split",
       "settings": {
         "width": "half",
-        "image": "shopify://shop_images/WhatsApp_Image_2026-07-20_at_21.14.51.jpg",
+        "image": "shopify://shop_images/1N3A9105.jpg",
         "image_asset": "feature-9012.jpg",
         "heading": "Familiar.",
         "heading_color": "#f4f1e9",
@@ -111,10 +110,10 @@
       "type": "feature-split",
       "settings": {
         "width": "half",
-        "image": "shopify://shop_images/WhatsApp_Image_2026-07-20_at_21.14.51_1.jpg",
+        "image": "shopify://shop_images/1N3A8980.jpg",
         "image_asset": "feature-9006.jpg",
         "heading": "Multiple lengths.",
-        "heading_color": "#f4f1e9",
+        "heading_color": "#090909",
         "background_color": "",
         "image_side": "left",
         "image_height": 85,
