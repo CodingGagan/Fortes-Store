@@ -1,28 +1,23 @@
 {% comment %}
-  Product highlights — stacked image + copy rows shown on every PDP.
+  Product highlights — full-height editorial rows shown on every PDP.
 
-  Each row is a block: a narrow image column on one side and a tinted copy
-  panel filling the rest of the row, separated by a rule. Copy can be a
-  bullet list (one item per line), rich text, or both.
+  Each row is a block: a tall media panel (image or video) on one side that
+  fades into a quiet copy panel on the other — small eyebrow label, large
+  serif statement, optional bullet list and a row of certification logos.
+  Rows alternate sides (left / right / left) by default.
 
-  Everything (image, heading, bullets, body, side, colours) is editable in
-  the theme editor. Because text/image settings accept dynamic sources, a
-  merchant can also bind any row to a product metafield to vary the content
-  per product while keeping one shared layout.
+  Everything (media, copy, side, colours, type scale) is editable in the
+  theme editor. Because text/image settings accept dynamic sources, a
+  merchant can bind any row to a product metafield to vary the content per
+  product while keeping one shared layout.
 
   https://shopify.dev/docs/storefronts/themes/architecture/sections
 {% endcomment %}
 
-{%- liquid
-  assign panel_bg = section.settings.panel_color
-  assign heading_color = section.settings.heading_color
-  assign text_color = section.settings.text_color
--%}
-
 {%- if section.blocks.size > 0 -%}
   <div
     class="phl full-width"
-    style="--phl-panel: {{ panel_bg }}; --phl-heading: {{ heading_color }}; --phl-text: {{ text_color }}; --phl-line: {{ section.settings.divider_color }}; --phl-line-width: {{ section.settings.divider_width }}px; --phl-media-width: {{ section.settings.image_width }}%; --phl-row-height: {{ section.settings.row_height }}px; --phl-pad-x: {{ section.settings.text_padding }}px;"
+    style="--phl-panel: {{ section.settings.panel_color }}; --phl-eyebrow: {{ section.settings.eyebrow_color }}; --phl-text: {{ section.settings.text_color }}; --phl-line: {{ section.settings.divider_color }}; --phl-line-width: {{ section.settings.divider_width }}px; --phl-media-width: {{ section.settings.media_width }}%; --phl-row-height: {{ section.settings.row_height }}vh; --phl-statement: {{ section.settings.statement_size }}px; --phl-fade: {{ section.settings.media_fade }}%; --phl-badge-height: {{ section.settings.badge_height }}px;"
   >
     {%- if section.settings.heading != blank -%}
       <h2 class="phl__title">{{ section.settings.heading | escape }}</h2>
@@ -35,26 +30,39 @@
         {{ block.shopify_attributes }}
       >
         <div class="phl__media">
-          {%- if block.settings.image != blank -%}
+          {%- if block.settings.video != blank -%}
+            {{
+              block.settings.video
+              | video_tag:
+                image_size: '1200x',
+                autoplay: true,
+                loop: true,
+                muted: true,
+                controls: false,
+                class: 'phl__asset'
+            }}
+          {%- elsif block.settings.image != blank -%}
             {{
               block.settings.image
-              | image_url: width: 800
+              | image_url: width: 1600
               | image_tag:
-                widths: '200, 400, 600, 800',
-                sizes: '(max-width: 749px) 100vw, 25vw',
-                class: 'phl__image',
+                widths: '400, 600, 900, 1200, 1600',
+                sizes: '(max-width: 749px) 100vw, 50vw',
+                class: 'phl__asset',
                 alt: block.settings.image.alt | default: block.settings.heading,
                 loading: 'lazy'
             }}
           {%- else -%}
-            {{ 'image' | placeholder_svg_tag: 'phl__image phl__image--placeholder' }}
+            {{ 'lifestyle-1' | placeholder_svg_tag: 'phl__asset phl__asset--placeholder' }}
           {%- endif -%}
+
+          <span class="phl__fade" aria-hidden="true"></span>
         </div>
 
         <div class="phl__panel">
           <div class="phl__copy">
             {%- if block.settings.heading != blank -%}
-              <h3 class="phl__heading">{{ block.settings.heading | escape }}</h3>
+              <p class="phl__eyebrow">{{ block.settings.heading | escape }}</p>
             {%- endif -%}
 
             {%- assign bullets = block.settings.bullets | strip | newline_to_br | split: '<br />' -%}
@@ -70,7 +78,24 @@
             {%- endif -%}
 
             {%- if block.settings.body != blank -%}
-              <div class="phl__text">{{ block.settings.body }}</div>
+              <div class="phl__statement">{{ block.settings.body }}</div>
+            {%- endif -%}
+
+            {%- capture badges -%}
+              {%- for i in (1..4) -%}
+                {%- assign key = 'badge_' | append: i -%}
+                {%- assign badge = block.settings[key] -%}
+                {%- if badge != blank -%}
+                  {{
+                    badge
+                    | image_url: height: 200
+                    | image_tag: class: 'phl__badge', alt: badge.alt | default: '', loading: 'lazy'
+                  }}
+                {%- endif -%}
+              {%- endfor -%}
+            {%- endcapture -%}
+            {%- if badges != blank -%}
+              <div class="phl__badges">{{ badges }}</div>
             {%- endif -%}
           </div>
         </div>
@@ -81,31 +106,31 @@
 
 {% stylesheet %}
   .phl {
-    background: var(--phl-panel, #d3ab98);
-    color: var(--phl-text, #1c1c1c);
+    background: var(--phl-panel, #f3f1ec);
+    color: var(--phl-text, #4a463f);
   }
 
   .phl__title {
     margin: 0;
-    padding: 1.5rem var(--phl-pad-x, 32px) 0;
-    color: var(--phl-heading, #1c1c1c);
+    padding: clamp(2rem, 5vw, 4rem) clamp(1.5rem, 6vw, 7rem) 0;
+    color: var(--phl-eyebrow, #1c1c1c);
     font-family: var(--font-product, var(--font-heading--family));
     font-size: clamp(1.5rem, 3vw, 2.25rem);
   }
 
   .phl__row {
     display: grid;
-    grid-template-columns: var(--phl-media-width, 17%) 1fr;
+    grid-template-columns: var(--phl-media-width, 45%) 1fr;
     align-items: stretch;
-    min-height: var(--phl-row-height, 250px);
+    min-height: var(--phl-row-height, 80vh);
   }
 
-  /* Rule between rows, matching the mockup's full-bleed divider. */
+  /* Optional hairline between rows (off by default — the fade does the work). */
   .phl__row + .phl__row {
-    border-top: var(--phl-line-width, 2px) solid var(--phl-line, #000000);
+    border-top: var(--phl-line-width, 0px) solid var(--phl-line, #000000);
   }
 
-  /* Image on the right flips the two columns. */
+  /* Media on the right flips the two columns and the fade direction. */
   .phl__row[data-side='right'] .phl__media {
     order: 2;
   }
@@ -116,68 +141,113 @@
   .phl__media {
     position: relative;
     overflow: hidden;
-    background: var(--phl-panel, #d3ab98);
+    background: var(--phl-panel, #f3f1ec);
   }
 
-  .phl__image {
+  .phl__asset,
+  .phl__media video,
+  .phl__media img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  .phl__image--placeholder {
-    background: rgba(0, 0, 0, 0.06);
+  .phl__asset--placeholder {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  /* Soft bleed so the media dissolves into the copy panel. */
+  .phl__fade {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      transparent calc(100% - var(--phl-fade, 45%)),
+      var(--phl-panel, #f3f1ec) 100%
+    );
+  }
+
+  .phl__row[data-side='right'] .phl__fade {
+    background: linear-gradient(
+      to left,
+      transparent 0%,
+      transparent calc(100% - var(--phl-fade, 45%)),
+      var(--phl-panel, #f3f1ec) 100%
+    );
   }
 
   .phl__panel {
     display: flex;
     align-items: center;
-    padding: 2rem var(--phl-pad-x, 32px);
+    padding: clamp(2.5rem, 6vw, 6rem) clamp(1.5rem, 5vw, 5rem);
   }
 
   .phl__copy {
-    max-width: 68ch;
+    max-width: 34ch;
   }
 
-  .phl__heading {
-    margin: 0 0 0.5rem;
-    color: var(--phl-heading, #1c1c1c);
-    font-family: var(--font-product, var(--font-heading--family));
-    font-size: clamp(1.125rem, 1.6vw, 1.5rem);
+  /* Small sans label above the statement. */
+  .phl__eyebrow {
+    margin: 0 0 1.5rem;
+    color: var(--phl-eyebrow, #1c1c1c);
+    font-family: var(--font-body, var(--font-primary--family));
+    font-size: 1rem;
     font-weight: 700;
+    line-height: 1.4;
+  }
+
+  .phl__statement {
+    font-family: var(--font-product, var(--font-heading--family));
+    font-size: clamp(1.5rem, 2.4vw, var(--phl-statement, 40px));
+    line-height: 1.5;
+  }
+
+  .phl__statement p {
+    margin: 0 0 0.75em;
+  }
+
+  .phl__statement p:last-child {
+    margin-bottom: 0;
   }
 
   .phl__list {
     margin: 0;
-    padding-left: 1.4em;
+    padding-left: 1.1em;
     list-style: disc;
+    font-family: var(--font-product, var(--font-heading--family));
+    font-size: clamp(1.25rem, 1.8vw, calc(var(--phl-statement, 40px) * 0.7));
+    line-height: 1.6;
   }
 
   .phl__list li {
-    margin-bottom: 0.35rem;
-    font-weight: 600;
-    line-height: 1.5;
+    margin-bottom: 0.3em;
   }
 
   .phl__list li:last-child {
     margin-bottom: 0;
   }
 
-  .phl__text {
-    line-height: 1.6;
+  .phl__list + .phl__statement {
+    margin-top: 1.25rem;
   }
 
-  .phl__list + .phl__text {
-    margin-top: 0.75rem;
+  /* Certification / trust logos. */
+  .phl__badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: clamp(1.5rem, 3vw, 3rem);
+    margin-top: clamp(2rem, 5vw, 4rem);
   }
 
-  .phl__text p {
-    margin: 0 0 0.75rem;
-  }
-
-  .phl__text p:last-child {
-    margin-bottom: 0;
+  .phl__badge {
+    width: auto;
+    height: var(--phl-badge-height, 56px);
+    object-fit: contain;
+    opacity: 0.85;
   }
 
   @media (max-width: 749px) {
@@ -191,10 +261,29 @@
       order: 0;
     }
     .phl__media {
-      height: 220px;
+      height: 55vh;
+    }
+    /* Fade runs bottom-up once the row stacks. */
+    .phl__fade,
+    .phl__row[data-side='right'] .phl__fade {
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        transparent 70%,
+        var(--phl-panel, #f3f1ec) 100%
+      );
+    }
+    .phl__copy {
+      max-width: none;
     }
     .phl__panel {
-      padding: 1.5rem 1.25rem;
+      padding: 2rem 1.5rem 3rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .phl__media video {
+      display: none;
     }
   }
 {% endstylesheet %}
@@ -206,7 +295,7 @@
   "settings": [
     {
       "type": "paragraph",
-      "content": "Stacked image + copy rows. Add one block per row. Any text or image field can be connected to a product metafield with the dynamic-source picker so the content differs per product."
+      "content": "Full-height image/video + copy rows. Add one block per row and alternate the media side. Any text or image field can be connected to a product metafield with the dynamic-source picker so the content differs per product."
     },
     {
       "type": "text",
@@ -221,20 +310,20 @@
     {
       "type": "color",
       "id": "panel_color",
-      "label": "Panel background",
-      "default": "#d3ab98"
+      "label": "Background",
+      "default": "#f3f1ec"
     },
     {
       "type": "color",
-      "id": "heading_color",
-      "label": "Heading colour",
+      "id": "eyebrow_color",
+      "label": "Label colour",
       "default": "#1c1c1c"
     },
     {
       "type": "color",
       "id": "text_color",
-      "label": "Text colour",
-      "default": "#1c1c1c"
+      "label": "Body colour",
+      "default": "#4a463f"
     },
     {
       "type": "color",
@@ -250,7 +339,8 @@
       "step": 1,
       "unit": "px",
       "label": "Divider thickness",
-      "default": 2
+      "info": "0 keeps the rows seamless, as in the reference layout.",
+      "default": 0
     },
     {
       "type": "header",
@@ -258,33 +348,53 @@
     },
     {
       "type": "range",
-      "id": "image_width",
-      "min": 10,
-      "max": 50,
+      "id": "media_width",
+      "min": 25,
+      "max": 65,
       "step": 1,
       "unit": "%",
-      "label": "Image column width",
-      "default": 17
+      "label": "Media column width",
+      "default": 45
     },
     {
       "type": "range",
       "id": "row_height",
-      "min": 160,
-      "max": 520,
-      "step": 10,
-      "unit": "px",
+      "min": 40,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
       "label": "Row height",
-      "default": 250
+      "default": 80
     },
     {
       "type": "range",
-      "id": "text_padding",
-      "min": 16,
+      "id": "media_fade",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "label": "Media fade into background",
+      "default": 45
+    },
+    {
+      "type": "range",
+      "id": "statement_size",
+      "min": 24,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "label": "Statement text size",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "badge_height",
+      "min": 24,
       "max": 120,
       "step": 4,
       "unit": "px",
-      "label": "Text side padding",
-      "default": 32
+      "label": "Logo height",
+      "default": 56
     }
   ],
   "blocks": [
@@ -298,9 +408,15 @@
           "label": "Image"
         },
         {
+          "type": "video",
+          "id": "video",
+          "label": "Video",
+          "info": "Optional. Plays muted on loop and replaces the image above."
+        },
+        {
           "type": "select",
           "id": "image_position",
-          "label": "Image side",
+          "label": "Media side",
           "options": [
             { "value": "left", "label": "Left" },
             { "value": "right", "label": "Right" }
@@ -310,19 +426,44 @@
         {
           "type": "text",
           "id": "heading",
-          "label": "Heading",
+          "label": "Label",
+          "info": "Small bold line above the statement, e.g. “Made Right”.",
           "default": "Material"
         },
         {
           "type": "textarea",
           "id": "bullets",
           "label": "Bullet list",
-          "info": "One bullet per line. Leave blank to show only the paragraph below."
+          "info": "One bullet per line. Leave blank to show only the statement below."
         },
         {
           "type": "richtext",
           "id": "body",
-          "label": "Paragraph"
+          "label": "Statement"
+        },
+        {
+          "type": "header",
+          "content": "Logos"
+        },
+        {
+          "type": "image_picker",
+          "id": "badge_1",
+          "label": "Logo 1"
+        },
+        {
+          "type": "image_picker",
+          "id": "badge_2",
+          "label": "Logo 2"
+        },
+        {
+          "type": "image_picker",
+          "id": "badge_3",
+          "label": "Logo 3"
+        },
+        {
+          "type": "image_picker",
+          "id": "badge_4",
+          "label": "Logo 4"
         }
       ]
     }
@@ -343,7 +484,7 @@
           "type": "row",
           "settings": {
             "heading": "The FORTES Quality Badge",
-            "image_position": "left",
+            "image_position": "right",
             "body": "<p>The badge on every sleeve is more than a logo, it's our promise of quality. It represents premium materials, meticulous craftsmanship, and uncompromising attention to detail. When you wear the FORTES badge, you wear a standard built to last.</p>"
           }
         },
