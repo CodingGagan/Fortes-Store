@@ -6,11 +6,26 @@
   margin: 0;
 }
 
+/**
+ * Sections stack in a two-track grid. Everything spans the full row by
+ * default, so the page reads as a single column exactly as before — but a
+ * section can opt into a single track (see `.split--half` in
+ * sections/feature-split.liquid) and two adjacent half sections then share
+ * one row, side by side.
+ *
+ * `align-content: start` keeps rows at their natural height; without it the
+ * grid would stretch them to fill `min-height` on short pages.
+ */
 body {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-content: start;
   margin: 0;
   min-height: 100svh;
+}
+
+body > * {
+  grid-column: 1 / -1;
 }
 
 html:has(dialog[scroll-lock][open], details[scroll-lock][open]) {

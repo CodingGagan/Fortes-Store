@@ -27,6 +27,7 @@
     "feature-1": {
       "type": "feature-split",
       "settings": {
+        "width": "half",
         "image": "shopify://shop_images/WhatsApp_Image_2026-07-20_at_21.21.33.jpg",
         "image_asset": "feature-9012.jpg",
         "heading": "New at Home",
@@ -49,6 +50,7 @@
     "feature-2": {
       "type": "feature-split",
       "settings": {
+        "width": "half",
         "image": "shopify://shop_images/WhatsApp_Image_2026-07-20_at_21.13.43.jpg",
         "image_asset": "feature-9006.jpg",
         "heading": "India's Secret",
@@ -85,6 +87,7 @@
     "feature-3": {
       "type": "feature-split",
       "settings": {
+        "width": "half",
         "image": "shopify://shop_images/WhatsApp_Image_2026-07-20_at_21.14.51.jpg",
         "image_asset": "feature-9012.jpg",
         "heading": "Familiar.",
@@ -107,6 +110,7 @@
     "feature-4": {
       "type": "feature-split",
       "settings": {
+        "width": "half",
         "image": "shopify://shop_images/WhatsApp_Image_2026-07-20_at_21.14.51_1.jpg",
         "image_asset": "feature-9006.jpg",
         "heading": "Multiple lengths.",

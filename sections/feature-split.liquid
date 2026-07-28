@@ -19,7 +19,7 @@
   endif
 -%}
 <div
-  class="split full-width{% if section_url != blank %} has-link{% endif %}"
+  class="split full-width{% if section.settings.width == 'half' %} split--half{% endif %}{% if section_url != blank %} has-link{% endif %}"
   data-side="{{ section.settings.image_side }}"
   style="--split-height: {{ section.settings.image_height }}vh; --split-bg: {{ section_bg }}; --split-heading-color: {{ section.settings.heading_color }}; --split-btn-bg: {{ btn_bg }}; --split-btn-text: {{ btn_text }}; --split-gradient-color: {{ section.settings.gradient_color }}; --split-gradient-height: {{ section.settings.gradient_height }}%; --split-btn-offset: {{ section.settings.button_offset }}%;"
 >
@@ -80,6 +80,27 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     background-color: var(--split-bg, var(--color-background));
+  }
+
+  /**
+   * Half width: the section drops to one track of the body grid, so it pairs
+   * up with the neighbouring half section to share a row. Inside, the empty
+   * spacer column goes away and the image takes the whole section.
+   *
+   * The image measures 50vw either way — full width split 50/50 with the
+   * spacer, or half width with no spacer — so the heading, gradient and
+   * button keep exactly the proportions they have in the full-width layout.
+   */
+  .shopify-section:has(> .split--half) {
+    grid-column: span 1;
+  }
+
+  .split--half {
+    grid-template-columns: 1fr;
+  }
+
+  .split--half .split__spacer {
+    display: none;
   }
 
   /* When the image should sit on the right, swap the columns. */
@@ -164,6 +185,11 @@
 
   /* On small screens the empty white column collapses and the image stacks full-width. */
   @media (max-width: 749px) {
+    /* Paired sections stop sharing a row and stack full-width like the rest. */
+    .shopify-section:has(> .split--half) {
+      grid-column: 1 / -1;
+    }
+
     .split {
       grid-template-columns: 1fr;
     }
@@ -180,6 +206,17 @@
 {
   "name": "Split feature",
   "settings": [
+    {
+      "type": "select",
+      "id": "width",
+      "label": "Section width",
+      "info": "Set two neighbouring sections to Half and they sit side by side in one row, each filling its half with its image. Stacks full-width on mobile.",
+      "options": [
+        { "value": "full", "label": "Full width (image on one side, empty column on the other)" },
+        { "value": "half", "label": "Half (pairs with the neighbouring half section)" }
+      ],
+      "default": "full"
+    },
     {
       "type": "image_picker",
       "id": "image",
@@ -204,12 +241,14 @@
       "default": "#f4f1e9"
     },
     {
+      "visible_if": "{{ section.settings.width == 'full' }}",
       "type": "color",
       "id": "background_color",
       "label": "Section background",
       "info": "Fills the empty column beside the image. Leave blank to use the theme background."
     },
     {
+      "visible_if": "{{ section.settings.width == 'full' }}",
       "type": "select",
       "id": "image_side",
       "label": "Image side",
