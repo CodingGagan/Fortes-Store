@@ -5,10 +5,20 @@
     assign btn_url = linked_product.url
   endif
   assign section_url = linked_product.url | default: section.settings.button_url
+
+  # Card surface: a translucent tint of the chosen colour so the hero artwork
+  # still reads through it. Built with color_modify rather than color-mix so the
+  # alpha is resolved server-side.
+  assign card_bg_color = section.settings.card_background
+  if card_bg_color == blank
+    assign card_bg_color = '#343620'
+  endif
+  assign card_alpha = section.settings.card_opacity | divided_by: 100.0
+  assign card_bg = card_bg_color | color_modify: 'alpha', card_alpha
 -%}
 <div
   class="hero full-width{% if section_url != blank %} has-link{% endif %}"
-  style="--hero-height: {{ section.settings.image_height }}vh; --hero-text: {{ section.settings.text_color }};"
+  style="--hero-height: {{ section.settings.image_height }}vh; --hero-text: {{ section.settings.text_color }}; --hero-card-bg: {{ card_bg }}; --hero-card-text: {{ section.settings.card_text_color }}; --hero-card-height: {{ section.settings.card_height }}px; --hero-card-media: {{ section.settings.card_media_width }}%; --hero-card-radius: {{ section.settings.card_radius }}px; --hero-card-gap: {{ section.settings.card_gap }}px;"
 >
   {% if section.settings.image != blank %}
     {{
@@ -52,6 +62,64 @@
         {{ section.settings.button_label }}
       </a>
     {% endif %}
+
+    {%- comment -%} ===== CARDS (blocks) ===== {%- endcomment -%}
+    {%- if section.blocks.size > 0 -%}
+      <div class="hero-cards">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign card_tag = 'div'
+            if block.settings.link != blank
+              assign card_tag = 'a'
+            endif
+          -%}
+          <{{ card_tag }}
+            class="hero-card"
+            {% if block.settings.link != blank %}href="{{ block.settings.link }}"{% endif %}
+            {{ block.shopify_attributes }}
+          >
+            <div class="hero-card__media">
+              {%- if block.settings.video != blank -%}
+                {{
+                  block.settings.video
+                  | video_tag:
+                    image_size: '600x',
+                    autoplay: true,
+                    loop: true,
+                    muted: true,
+                    controls: false,
+                    class: 'hero-card__asset'
+                }}
+              {%- elsif block.settings.image != blank -%}
+                {{
+                  block.settings.image
+                  | image_url: width: 800
+                  | image_tag:
+                    widths: '200, 400, 600, 800',
+                    sizes: '(max-width: 749px) 40vw, 20vw',
+                    class: 'hero-card__asset',
+                    alt: block.settings.image.alt | default: block.settings.heading
+                }}
+              {%- else -%}
+                {{ 'lifestyle-1' | placeholder_svg_tag: 'hero-card__asset hero-card__asset--placeholder' }}
+              {%- endif -%}
+
+              {%- if block.settings.show_play -%}
+                <span class="hero-card__play" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+                </span>
+              {%- endif -%}
+            </div>
+
+            {%- if block.settings.heading != blank -%}
+              <div class="hero-card__body">
+                <span class="hero-card__title">{{ block.settings.heading }}</span>
+              </div>
+            {%- endif -%}
+          </{{ card_tag }}>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
   </div>
 </div>
 
@@ -139,6 +207,111 @@
     font-size: clamp(3rem, 9vw, 7rem);
     text-shadow: 0 1px 24px rgba(0, 0, 0, 0.3);
   }
+
+  /* ===== CARDS ===== */
+
+  /**
+   * With cards the hero grows past its configured height rather than cropping
+   * them, so a tall heading + button + card row can never overflow on a short
+   * viewport. The image is inset:0 absolute, so it simply fills the new height.
+   */
+  .hero:has(.hero-cards) {
+    height: auto;
+    min-height: var(--hero-height, 90vh);
+  }
+
+  .hero-cards {
+    /* Overrides the overlay's align-items so the row spans the full width
+       regardless of the section's content alignment setting. */
+    align-self: stretch;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+    gap: var(--hero-card-gap, 32px);
+  }
+
+  .hero-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--hero-card-media, 34%) 1fr;
+    min-height: var(--hero-card-height, 176px);
+    border-radius: var(--hero-card-radius, 10px);
+    overflow: hidden;
+    background: var(--hero-card-bg, rgba(52, 54, 32, 0.82));
+    color: var(--hero-card-text, #ffffff);
+    text-decoration: none;
+  }
+
+  /**
+   * The overlay is click-through when the whole hero is a link (see
+   * `.hero.has-link .hero__overlay`), so cards have to opt back in — same as
+   * the CTA above.
+   */
+  .hero.has-link .hero-card {
+    pointer-events: auto;
+  }
+
+  .hero-card__media {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-card__asset {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* Fades the artwork itself out to the right, so it dissolves into the card
+       surface exactly. Tinting with a gradient overlay instead would double up
+       on the translucent background and read as a darker band. */
+    -webkit-mask-image: linear-gradient(to right, #000 45%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 45%, transparent 100%);
+  }
+
+  .hero-card__asset--placeholder {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .hero-card__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: inline-flex;
+    color: #ffffff;
+    filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.45));
+    pointer-events: none;
+  }
+
+  .hero-card__play svg {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .hero-card__body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    text-align: center;
+  }
+
+  .hero-card__title {
+    font-family: var(--font-body);
+    font-size: clamp(1rem, 1.5vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  @media (max-width: 749px) {
+    .hero-card {
+      min-height: 0;
+    }
+
+    .hero-card__play svg {
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+  }
 {% endstylesheet %}
 
 {% schema %}
@@ -217,8 +390,112 @@
       "id": "button_url",
       "label": "Button link (override)",
       "info": "Optional. Leave blank to use the linked product above."
+    },
+    {
+      "type": "header",
+      "content": "Cards",
+      "info": "Add Card blocks below to show a row of media tiles under the button. They sit over the hero image and stack on mobile."
+    },
+    {
+      "type": "color",
+      "id": "card_background",
+      "label": "Card background",
+      "default": "#343620"
+    },
+    {
+      "type": "range",
+      "id": "card_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "label": "Card background opacity",
+      "default": 80
+    },
+    {
+      "type": "color",
+      "id": "card_text_color",
+      "label": "Card text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "card_height",
+      "min": 100,
+      "max": 320,
+      "step": 4,
+      "unit": "px",
+      "label": "Card height",
+      "default": 176
+    },
+    {
+      "type": "range",
+      "id": "card_media_width",
+      "min": 20,
+      "max": 60,
+      "step": 1,
+      "unit": "%",
+      "label": "Card media width",
+      "default": 34
+    },
+    {
+      "type": "range",
+      "id": "card_radius",
+      "min": 0,
+      "max": 32,
+      "step": 1,
+      "unit": "px",
+      "label": "Card corner radius",
+      "default": 10
+    },
+    {
+      "type": "range",
+      "id": "card_gap",
+      "min": 0,
+      "max": 64,
+      "step": 2,
+      "unit": "px",
+      "label": "Gap between cards",
+      "default": 32
     }
   ],
+  "blocks": [
+    {
+      "type": "card",
+      "name": "Card",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "New Tones"
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "video",
+          "id": "video",
+          "label": "Video",
+          "info": "Optional. Takes priority over the image. Plays muted on a loop."
+        },
+        {
+          "type": "checkbox",
+          "id": "show_play",
+          "label": "Show play icon",
+          "default": false
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    }
+  ],
+  "max_blocks": 4,
   "presets": [
     {
       "name": "Hero"
