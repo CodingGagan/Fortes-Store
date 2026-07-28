@@ -35,9 +35,41 @@
       },
       "block_order": ["combo", "description", "fabric", "shipping", "fit"],
       "settings": {}
+    },
+    "highlights": {
+      "type": "product-highlights",
+      "blocks": {
+        "material": {
+          "type": "row",
+          "settings": {
+            "heading": "Material",
+            "image_position": "left",
+            "bullets": "Crafted with rare Suvin cotton.\nBlended with natural bamboo fibres.\nExceptionally fine and durable.\nNaturally breathable.\nPremium luxury fabric."
+          }
+        },
+        "badge": {
+          "type": "row",
+          "settings": {
+            "heading": "The FORTES Quality Badge",
+            "image_position": "left",
+            "body": "<p>The badge on every sleeve is more than a logo, it's our promise of quality. It represents premium materials, meticulous craftsmanship, and uncompromising attention to detail. When you wear the FORTES badge, you wear a standard built to last.</p>"
+          }
+        },
+        "feel": {
+          "type": "row",
+          "settings": {
+            "heading": "Feel",
+            "image_position": "left",
+            "bullets": "Silky soft.\nCool against the skin.\nLightweight comfort.\nBreathable all day.\nSmooth, premium finish."
+          }
+        }
+      },
+      "block_order": ["material", "badge", "feel"],
+      "settings": {}
     }
   },
   "order": [
-    "main"
+    "main",
+    "highlights"
   ]
 }
