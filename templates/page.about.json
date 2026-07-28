@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "about": {
@@ -30,7 +39,25 @@
         "value-2",
         "value-3"
       ],
-      "settings": {}
+      "settings": {
+        "dark_color": "#4d4631",
+        "cream_color": "#f4f1e9",
+        "accent_color": "#b8a06a",
+        "hero_kicker": "Our Story",
+        "hero_heading": "Every individual is a hero in their own journey",
+        "hero_image": "shopify://shop_images/hero-image.jpg",
+        "hero_image_asset": "hero-main.jpg",
+        "hero_height": 65,
+        "story_richtext": "<p>Fortes was born out of a simple but powerful belief: every individual is a hero in their own journey. Life is never easy. It bends us, tests us, and at times, breaks us. But within every struggle lies the seed of strength. Fortes was created as a tribute to that strength—to remind you that no matter what life throws at you, resilience is always within your reach.</p><p>For us, Fortes is not just a brand. It's a movement of courage. A lifestyle that says <strong>you are stronger than you think.</strong></p>",
+        "values_heading": "What We Stand For",
+        "mission_heading": "Our Mission",
+        "mission_text": "<p>To design clothing that inspires and empowers. Every product we create is more than apparel—it's a symbol of courage, crafted with purpose and designed to remind you of your inner strength.</p>",
+        "mission_image_asset": "feature-9012.jpg",
+        "mission_image_side": "left",
+        "founder_label": "From the Founder",
+        "founder_quote": "I created Fortes to celebrate resilience. Not the absence of struggle, but the strength to rise again. Fortes is for everyone fighting their battles and choosing to live as the hero of their own story.",
+        "founder_signature": "— The Founder"
+      }
     }
   },
   "order": [
