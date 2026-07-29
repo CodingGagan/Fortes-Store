@@ -21,7 +21,14 @@
         "image_height": 90,
         "product": "",
         "button_label": "- BE THE CHANGE",
-        "button_url": "shopify://collections"
+        "button_url": "shopify://collections",
+        "card_background": "#343620",
+        "card_opacity": 80,
+        "card_text_color": "#ffffff",
+        "card_height": 176,
+        "card_media_width": 34,
+        "card_radius": 10,
+        "card_gap": 32
       }
     },
     "feature-1": {
@@ -31,7 +38,7 @@
         "image": "shopify://shop_images/1N3A9136_1_ea58315a-81e3-4a9e-8417-e012ed60316e.jpg",
         "image_asset": "feature-9012.jpg",
         "heading": "New at Home",
-        "heading_color": "#F8F8F8",
+        "heading_color": "#f8f8f8",
         "background_color": "",
         "image_side": "left",
         "image_height": 85,
@@ -71,12 +78,12 @@
     },
     "banner": {
       "type": "feature-banner",
-      "disabled": true,
       "settings": {
+        "image": "shopify://shop_images/hero-image.jpg",
         "image_asset": "hero-main.jpg",
         "heading": "Plain. Simple.",
-        "text_color": "#ffffff",
-        "content_position": "top",
+        "text_color": "#171717",
+        "content_position": "center",
         "image_height": 90,
         "product": "",
         "button_label": "The March Tee",
