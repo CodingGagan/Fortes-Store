@@ -69,8 +69,14 @@
       </div>
 
       <form method="get" action="{{ collection.url }}" class="filters__form">
-        {%- comment -%} Preserve the active sort while filtering. {%- endcomment -%}
-        <input type="hidden" name="sort_by" value="{{ current_sort }}">
+        {%- comment -%}
+          Preserve the active sort while filtering — but only once the shopper has
+          actually picked one, so filtering doesn't look like a sort choice and
+          switch off the custom group order below.
+        {%- endcomment -%}
+        {%- if collection.sort_by != blank -%}
+          <input type="hidden" name="sort_by" value="{{ collection.sort_by }}">
+        {%- endif -%}
 
         <div class="filters__scroll">
           {%- for filter in collection.filters -%}
@@ -140,7 +146,12 @@
         </div>
 
         <div class="filters__foot">
-          <a href="{{ collection.url }}?sort_by={{ current_sort }}" class="clear">Clear</a>
+          <a
+            href="{{ collection.url }}{% if collection.sort_by != blank %}?sort_by={{ collection.sort_by }}{% endif %}"
+            class="clear"
+          >
+            Clear
+          </a>
           <button type="submit" class="apply">
             Show {{ collection.products_count }} {% if collection.products_count == 1 %}result{% else %}results{% endif %}
           </button>
@@ -199,118 +210,71 @@
   </div>
 
   {%- comment -%} ===== PRODUCT GRID ===== {%- endcomment -%}
+  {%- liquid
+    # Merchant-defined running order, e.g. "solid, printed": every product in the
+    # first group is listed before the second, and anything in no group trails at
+    # the end keeping its original order. Skipped as soon as the shopper picks a
+    # sort option — their choice always wins over ours.
+    assign group_source = section.settings.group_source | default: 'tag'
+    assign group_values = ''
+    if section.settings.group_order != blank and collection.sort_by == blank
+      assign group_values = section.settings.group_order | split: ','
+    endif
+  -%}
   {%- paginate collection.products by section.settings.products_per_page -%}
     {%- if collection.products.size == 0 -%}
       <p class="collection__empty">No products found. Try clearing your filters.</p>
     {%- else -%}
       <ul class="grid" role="list">
-        {%- for product in collection.products -%}
-          {%- liquid
-            assign on_sale = false
-            if product.compare_at_price > product.price
-              assign on_sale = true
-            endif
-
-            assign color_option = null
-            for option in product.options_with_values
-              if option.name == section.settings.color_option_name
-                assign color_option = option
-              endif
-            endfor
-          -%}
-          <li class="card">
-            <div class="card__media">
-              {%- if on_sale -%}
-                <span class="card__badge card__badge--sale">Sale</span>
-              {%- elsif product.tags contains 'new' -%}
-                <span class="card__badge card__badge--new">New</span>
-              {%- elsif product.tags contains 'coming-soon' -%}
-                <span class="card__badge card__badge--soon">Coming soon</span>
+        {%- if group_values.size > 0 -%}
+          {%- for group in group_values -%}
+            {%- assign group_value = group | strip -%}
+            {%- if group_value == blank -%}
+              {%- continue -%}
+            {%- endif -%}
+            {%- for product in collection.products -%}
+              {%- capture in_group -%}
+                {%- render 'product-in-group',
+                  product: product,
+                  group_value: group_value,
+                  source: group_source
+                -%}
+              {%- endcapture -%}
+              {%- if in_group contains '1' -%}
+                {%- render 'product-card',
+                  product: product,
+                  color_option_name: section.settings.color_option_name
+                -%}
               {%- endif -%}
+            {%- endfor -%}
+          {%- endfor -%}
 
-              <span class="card__wish" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M12 21s-7-4.5-9-8.5C1 8 4 5 7 6c2 .7 3 2.5 5 4 2-1.5 3-3.3 5-4 3-1 6 2 4 6.5-2 4-9 8.5-9 8.5z" />
-                </svg>
-              </span>
-
-              <a href="{{ product.url }}" class="card__link" aria-label="{{ product.title | escape }}">
-                {%- if product.featured_media -%}
-                  {{
-                    product.featured_media
-                    | image_url: width: 800
-                    | image_tag:
-                      widths: '200, 300, 400, 600, 800',
-                      sizes: '(max-width: 560px) 50vw, (max-width: 1100px) 33vw, 25vw',
-                      class: 'card__image',
-                      loading: 'lazy',
-                      alt: product.featured_media.alt | default: product.title
-                  }}
-                {%- else -%}
-                  {{ 'product-1' | placeholder_svg_tag: 'card__image card__image--placeholder' }}
-                {%- endif -%}
-              </a>
-
-              {%- if product.available -%}
-                <form method="post" action="{{ routes.cart_add_url }}" class="card__form">
-                  <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
-                  <button type="submit" class="card__quick">Quick add</button>
-                </form>
-              {%- else -%}
-                <a href="{{ product.url }}" class="card__quick card__quick--static">
-                  {%- if product.tags contains 'coming-soon' -%}Notify me{%- else -%}Sold out{%- endif -%}
-                </a>
-              {%- endif -%}
-            </div>
-
-            <div class="card__info">
-              {%- assign rating = product.metafields.reviews.rating.value -%}
-              {%- if rating != blank -%}
-                {%- assign rating_round = rating | round -%}
-                <p class="stars" aria-label="Rated {{ rating }} out of 5">
-                  {%- for i in (1..5) -%}
-                    {%- if i <= rating_round %}★{% else %}☆{% endif -%}
-                  {%- endfor -%}
-                  <small>({{ product.metafields.reviews.rating_count.value | default: 0 }})</small>
-                </p>
-              {%- endif -%}
-
-              <a href="{{ product.url }}" class="card__title-link">
-                <h3 class="card__title">{{ product.title }}</h3>
-              </a>
-
-              {%- if product.type != blank or product.metafields.custom.colour_name != blank -%}
-                <p class="card__sub">
-                  {{- product.type -}}
-                  {%- if product.type != blank and product.metafields.custom.colour_name != blank %} · {% endif -%}
-                  {{- product.metafields.custom.colour_name -}}
-                </p>
-              {%- endif -%}
-
-              <p class="card__price">
-                {%- if on_sale -%}
-                  {{ product.price | money }}
-                  <span class="was">{{ product.compare_at_price | money }}</span>
-                {%- elsif product.price_varies -%}
-                  From {{ product.price_min | money }}
-                {%- else -%}
-                  {{ product.price | money }}
-                {%- endif -%}
-              </p>
-
-              {%- if color_option and color_option.values.size > 0 -%}
-                <div class="card__swatches">
-                  {%- for value in color_option.values limit: 5 -%}
-                    <i
-                      title="{{ value | escape }}"
-                      style="{% if value.swatch.color %}background: {{ value.swatch.color }};{% elsif value.swatch.image %}background-image: url({{ value.swatch.image | image_url: width: 40 }});{% else %}background: #d8d5cd;{% endif %}"
-                    ></i>
-                  {%- endfor -%}
-                </div>
-              {%- endif -%}
-            </div>
-          </li>
-        {%- endfor -%}
+          {%- comment -%} Anything matching none of the groups goes last. {%- endcomment -%}
+          {%- for product in collection.products -%}
+            {%- capture in_any_group -%}
+              {%- for group in group_values -%}
+                {%- render 'product-in-group',
+                  product: product,
+                  group_value: group,
+                  source: group_source
+                -%}
+              {%- endfor -%}
+            {%- endcapture -%}
+            {%- unless in_any_group contains '1' -%}
+              {%- render 'product-card',
+                product: product,
+                color_option_name: section.settings.color_option_name
+              -%}
+            {%- endunless -%}
+          {%- endfor -%}
+        {%- else -%}
+          {%- for product in collection.products -%}
+            {%- render 'product-card',
+              product: product,
+              color_option_name: section.settings.color_option_name
+            -%}
+          {%- endfor -%}
+        {%- endif -%}
       </ul>
 
       {%- if paginate.pages > 1 -%}
@@ -1006,10 +970,33 @@
       "type": "range",
       "id": "products_per_page",
       "min": 8,
-      "max": 48,
-      "step": 4,
+      "max": 50,
+      "step": 2,
       "label": "Products per page",
       "default": 24
+    },
+    {
+      "type": "header",
+      "content": "Custom product order"
+    },
+    {
+      "type": "text",
+      "id": "group_order",
+      "label": "Show these groups first, in order",
+      "info": "Comma-separated, e.g. solid, printed. Products in the first group are listed before the second; anything left over goes last. Leave blank to keep the collection's own order. Ignored once a shopper picks a sort option."
+    },
+    {
+      "type": "select",
+      "id": "group_source",
+      "label": "Match groups against",
+      "default": "tag",
+      "info": "Where each group name is looked for on a product.",
+      "options": [
+        { "value": "tag", "label": "Product tag" },
+        { "value": "type", "label": "Product type" },
+        { "value": "vendor", "label": "Vendor" },
+        { "value": "collection", "label": "Collection" }
+      ]
     },
     {
       "type": "text",

@@ -1,0 +1,51 @@
+{% comment %}
+  Outputs "1" when a product belongs to the given group, nothing otherwise.
+  Liquid snippets can't return a value, so callers wrap this in {% capture %}
+  and test the result with `contains '1'`.
+
+  Accepts:
+    · product     – the product object to test
+    · group_value – the group to test against (case-insensitive)
+    · source      – 'tag' (default), 'type', 'vendor' or 'collection'
+{% endcomment %}
+
+{%- liquid
+  assign needle = group_value | downcase | strip
+  assign match = false
+
+  case source
+    when 'type'
+      assign haystack = product.type | downcase | strip
+      if haystack == needle
+        assign match = true
+      endif
+
+    when 'vendor'
+      assign haystack = product.vendor | downcase | strip
+      if haystack == needle
+        assign match = true
+      endif
+
+    when 'collection'
+      assign needle_handle = needle | handleize
+      for group_collection in product.collections
+        assign collection_title = group_collection.title | downcase | strip
+        if group_collection.handle == needle_handle or collection_title == needle
+          assign match = true
+          break
+        endif
+      endfor
+
+    else
+      # Wrap both sides in pipes so "solid" doesn't match "solid-print".
+      assign haystack = product.tags | join: '|' | downcase | prepend: '|' | append: '|'
+      assign key = needle | prepend: '|' | append: '|'
+      if haystack contains key
+        assign match = true
+      endif
+  endcase
+
+  if match
+    echo '1'
+  endif
+-%}

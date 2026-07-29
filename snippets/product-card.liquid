@@ -1,0 +1,113 @@
+{% comment %}
+  Product card used by the collection grid.
+
+  Accepts:
+    · product           – the product object to render
+    · color_option_name – product option used for the swatch row (e.g. "Color")
+{% endcomment %}
+
+{%- liquid
+  assign on_sale = false
+  if product.compare_at_price > product.price
+    assign on_sale = true
+  endif
+
+  assign color_option = null
+  for option in product.options_with_values
+    if option.name == color_option_name
+      assign color_option = option
+    endif
+  endfor
+-%}
+<li class="card">
+  <div class="card__media">
+    {%- if on_sale -%}
+      <span class="card__badge card__badge--sale">Sale</span>
+    {%- elsif product.tags contains 'new' -%}
+      <span class="card__badge card__badge--new">New</span>
+    {%- elsif product.tags contains 'coming-soon' -%}
+      <span class="card__badge card__badge--soon">Coming soon</span>
+    {%- endif -%}
+
+    <span class="card__wish" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 21s-7-4.5-9-8.5C1 8 4 5 7 6c2 .7 3 2.5 5 4 2-1.5 3-3.3 5-4 3-1 6 2 4 6.5-2 4-9 8.5-9 8.5z" />
+      </svg>
+    </span>
+
+    <a href="{{ product.url }}" class="card__link" aria-label="{{ product.title | escape }}">
+      {%- if product.featured_media -%}
+        {{
+          product.featured_media
+          | image_url: width: 800
+          | image_tag:
+            widths: '200, 300, 400, 600, 800',
+            sizes: '(max-width: 560px) 50vw, (max-width: 1100px) 33vw, 25vw',
+            class: 'card__image',
+            loading: 'lazy',
+            alt: product.featured_media.alt | default: product.title
+        }}
+      {%- else -%}
+        {{ 'product-1' | placeholder_svg_tag: 'card__image card__image--placeholder' }}
+      {%- endif -%}
+    </a>
+
+    {%- if product.available -%}
+      <form method="post" action="{{ routes.cart_add_url }}" class="card__form">
+        <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+        <button type="submit" class="card__quick">Quick add</button>
+      </form>
+    {%- else -%}
+      <a href="{{ product.url }}" class="card__quick card__quick--static">
+        {%- if product.tags contains 'coming-soon' -%}Notify me{%- else -%}Sold out{%- endif -%}
+      </a>
+    {%- endif -%}
+  </div>
+
+  <div class="card__info">
+    {%- assign rating = product.metafields.reviews.rating.value -%}
+    {%- if rating != blank -%}
+      {%- assign rating_round = rating | round -%}
+      <p class="stars" aria-label="Rated {{ rating }} out of 5">
+        {%- for i in (1..5) -%}
+          {%- if i <= rating_round %}★{% else %}☆{% endif -%}
+        {%- endfor -%}
+        <small>({{ product.metafields.reviews.rating_count.value | default: 0 }})</small>
+      </p>
+    {%- endif -%}
+
+    <a href="{{ product.url }}" class="card__title-link">
+      <h3 class="card__title">{{ product.title }}</h3>
+    </a>
+
+    {%- if product.type != blank or product.metafields.custom.colour_name != blank -%}
+      <p class="card__sub">
+        {{- product.type -}}
+        {%- if product.type != blank and product.metafields.custom.colour_name != blank %} · {% endif -%}
+        {{- product.metafields.custom.colour_name -}}
+      </p>
+    {%- endif -%}
+
+    <p class="card__price">
+      {%- if on_sale -%}
+        {{ product.price | money }}
+        <span class="was">{{ product.compare_at_price | money }}</span>
+      {%- elsif product.price_varies -%}
+        From {{ product.price_min | money }}
+      {%- else -%}
+        {{ product.price | money }}
+      {%- endif -%}
+    </p>
+
+    {%- if color_option and color_option.values.size > 0 -%}
+      <div class="card__swatches">
+        {%- for value in color_option.values limit: 5 -%}
+          <i
+            title="{{ value | escape }}"
+            style="{% if value.swatch.color %}background: {{ value.swatch.color }};{% elsif value.swatch.image %}background-image: url({{ value.swatch.image | image_url: width: 40 }});{% else %}background: #d8d5cd;{% endif %}"
+          ></i>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</li>
