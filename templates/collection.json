@@ -18,6 +18,8 @@
         "show_sort": true,
         "columns": 5,
         "products_per_page": 24,
+        "group_order": "Solids",
+        "group_source": "collection",
         "color_option_name": "Color",
         "accent_color": "#5b6b96"
       }
