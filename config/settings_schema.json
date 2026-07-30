@@ -87,6 +87,13 @@
         "label": "Button text"
       },
       {
+        "type": "textarea",
+        "id": "color_swatch_map",
+        "label": "Colour swatch map",
+        "info": "One per line as “name: colour”, e.g. wine: #722f37. Used for colour swatches on product pages and collection cards when an option value has no native Shopify swatch. Unlisted names fall back to a built-in colour table, then to matching CSS colour names.",
+        "default": "pista green: #b5d99c\nolive: #6b7a3a\nwine: #722f37\nburgundy: #6d071a\nmaroon: #7b1e2b\nmustard: #d5a021\nsand: #d7c9a8\ncharcoal: #36454f\ncream: #f4f0e6\nrust: #b7410e\nblush: #de8f9a\nsage: #9caf88\nforest: #22402f\ndark green: #14452f\noff white: #f2f0e6"
+      },
+      {
         "type": "range",
         "id": "input_corner_radius",
         "min": 0,

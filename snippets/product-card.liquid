@@ -4,6 +4,8 @@
   Accepts:
     · product           – the product object to render
     · color_option_name – product option used for the swatch row (e.g. "Color")
+    · swatch_map        – optional "name: colour" lines for swatch fills;
+                          falls back to the theme-level colour swatch map
 {% endcomment %}
 
 {%- liquid
@@ -104,7 +106,7 @@
         {%- for value in color_option.values limit: 5 -%}
           <i
             title="{{ value | escape }}"
-            style="{% if value.swatch.color %}background: {{ value.swatch.color }};{% elsif value.swatch.image %}background-image: url({{ value.swatch.image | image_url: width: 40 }});{% else %}background: #d8d5cd;{% endif %}"
+            style="{% render 'swatch-style', swatch_value: value, swatch_map: swatch_map %}"
           ></i>
         {%- endfor -%}
       </div>

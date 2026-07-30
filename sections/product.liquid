@@ -185,47 +185,11 @@
 
               {%- if is_color -%}
                 <div class="swatches">
-                  {%- assign swatch_map = section.settings.color_swatch_map | newline_to_br | split: '<br />' -%}
                   {%- for value in option.values -%}
-                    {%- liquid
-                      # Resolve a fill for the colour dot, in priority order:
-                      #  1. Shopify's native swatch (Admin › option value)
-                      #  2. merchant name→colour map (section setting)
-                      #  3. the colour name used directly as a CSS colour
-                      #     (e.g. "Dark Green" → darkgreen); invalid names fall
-                      #     back to the .swatch base colour via CSS.
-                      assign sw_style = ''
-                      if value.swatch.color
-                        assign sw_style = 'background: ' | append: value.swatch.color | append: ';'
-                      elsif value.swatch.image
-                        assign sw_img = value.swatch.image | image_url: width: 80
-                        assign sw_style = 'background-image: url(' | append: sw_img | append: ');'
-                      else
-                        assign vname = value | downcase | strip
-                        assign mapped = ''
-                        for line in swatch_map
-                          assign kv = line | split: ':'
-                          if kv.size < 2
-                            continue
-                          endif
-                          assign k = kv[0] | downcase | strip
-                          if k == vname
-                            assign mapped = kv[1] | strip
-                            break
-                          endif
-                        endfor
-                        if mapped != blank
-                          assign sw_style = 'background: ' | append: mapped | append: ';'
-                        else
-                          assign css_name = vname | replace: ' ', '' | replace: '-', ''
-                          assign sw_style = 'background: ' | append: css_name | append: ';'
-                        endif
-                      endif
-                    -%}
                     <label
                       class="swatch{% if value.selected %} is-on{% endif %}"
                       title="{{ value | escape }}"
-                      style="{{ sw_style }}"
+                      style="{% render 'swatch-style', swatch_value: value, swatch_map: section.settings.color_swatch_map %}"
                     >
                       <input
                         type="radio"
@@ -1437,7 +1401,7 @@
       "type": "textarea",
       "id": "color_swatch_map",
       "label": "Colour swatch map",
-      "info": "One per line as “name: colour”, e.g. wine: #722f37. Used when a colour has no native Shopify swatch. Names not listed fall back to matching CSS colour names (Dark Green → darkgreen).",
+      "info": "One per line as “name: colour”, e.g. wine: #722f37. Overrides for this page only, used when a colour has no native Shopify swatch. Unlisted names fall back to the theme-level colour swatch map (Theme settings › Colors), then a built-in colour table, then matching CSS colour names.",
       "default": "wine: #722f37\nburgundy: #6d071a\nmaroon: #7b1e2b\nmustard: #d5a021\nsand: #d7c9a8\ncharcoal: #36454f\ncream: #f4f0e6\nrust: #b7410e\nblush: #de8f9a\nsage: #9caf88\nforest: #22402f\ndark green: #14452f\noff white: #f2f0e6"
     },
     {

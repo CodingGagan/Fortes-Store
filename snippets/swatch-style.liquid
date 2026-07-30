@@ -1,0 +1,70 @@
+{%- comment -%}
+  Resolves the inline CSS fill for a colour swatch and prints it, so the PDP
+  and the collection card show the same real colour for the same option value.
+
+  Accepts:
+    · swatch_value – a product option value object (or a plain colour name)
+    · swatch_map   – optional extra "name: colour" lines (one per line);
+                     merged ahead of the theme-level setting
+
+  Resolution order:
+    1. Shopify's native swatch colour (Admin › option value)
+    2. Shopify's native swatch image
+    3. the passed swatch_map, then settings.color_swatch_map
+    4. the built-in colour-name table below
+    5. the name used directly as a CSS colour keyword (Dark Green → darkgreen);
+       an unrecognised keyword is dropped by the browser, leaving the base fill
+
+  Usage:
+    style="{% render 'swatch-style', swatch_value: value %}"
+{%- endcomment -%}
+{%- liquid
+  assign sw_style = ''
+
+  if swatch_value.swatch.color
+    assign sw_style = 'background: ' | append: swatch_value.swatch.color | append: ';'
+  elsif swatch_value.swatch.image
+    assign sw_img = swatch_value.swatch.image | image_url: width: 80
+    assign sw_style = 'background-image: url(' | append: sw_img | append: '); background-size: cover;'
+  else
+    assign sw_name = swatch_value | downcase | strip | replace: '-', ' ' | replace: '_', ' '
+    assign sw_hit = ''
+
+    # 3. merchant maps — the caller's lines first, then the theme-wide ones.
+    assign sw_lines = swatch_map | default: '' | newline_to_br | split: '<br />'
+    assign sw_theme_lines = settings.color_swatch_map | default: '' | newline_to_br | split: '<br />'
+    assign sw_lines = sw_lines | concat: sw_theme_lines
+    for line in sw_lines
+      assign kv = line | split: ':'
+      if kv.size < 2
+        continue
+      endif
+      assign k = kv[0] | downcase | strip | replace: '-', ' ' | replace: '_', ' '
+      if k == sw_name
+        assign sw_hit = kv[1] | strip
+        break
+      endif
+    endfor
+
+    # 4. built-in apparel colour names, "name:hex" separated by commas.
+    if sw_hit == blank
+      assign sw_builtin = 'black:#111111,jet black:#0b0b0b,anthracite:#333333,graphite:#3a3a3a,white:#ffffff,off white:#f2f0e6,ivory:#fffff0,cream:#f4f0e6,ecru:#d6cdb7,natural:#e5dcc3,beige:#e8dcc4,sand:#d7c9a8,stone:#a8a19b,taupe:#b1a394,nude:#e3bc9a,khaki:#c3b091,camel:#c19a6b,tan:#d2b48c,brown:#6b4423,coffee:#4b3621,chocolate:#4a2c2a,mocha:#7f5539,rust:#b7410e,terracotta:#c46a4c,brick:#9c3b2e,maroon:#7b1e2b,burgundy:#6d071a,wine:#722f37,red:#d0021b,cherry:#b02428,crimson:#dc143c,coral:#ff7f50,peach:#ffcba4,salmon:#fa8072,blush:#de8f9a,pink:#ffc0cb,hot pink:#ff69b4,fuchsia:#d63c8f,magenta:#c2185b,rose:#c76d84,dusty rose:#c08a90,lavender:#c9b6e4,lilac:#c8a2c8,purple:#6a3d9a,violet:#7f4fc9,plum:#6b3050,mauve:#a67b8a,indigo:#2f3e6c,navy:#1b264f,navy blue:#1b264f,midnight blue:#191970,royal blue:#2b4bbf,blue:#2a5db0,cobalt:#2f5fbf,denim:#3b5f8a,sky blue:#87ceeb,powder blue:#b0d4e3,baby blue:#a7c7e7,teal:#0f7d7d,turquoise:#40e0d0,aqua:#7fdbda,mint:#a8e6cf,mint green:#9fe2bf,pista:#b5d99c,pista green:#b5d99c,pistachio:#b5d99c,sage:#9caf88,sage green:#9caf88,olive:#6b7a3a,olive green:#6b7a3a,army green:#4b5320,military green:#55603b,moss:#7a8450,green:#2e7d32,bottle green:#14452f,dark green:#14452f,forest:#22402f,forest green:#22402f,emerald:#2e8b57,lime:#9acd32,yellow:#f4c430,mustard:#d5a021,gold:#c9a227,golden:#d4af37,mango:#ffb347,amber:#ffbf00,apricot:#f6a96b,orange:#e8730c,grey:#808080,gray:#808080,light grey:#d3d3d3,light gray:#d3d3d3,dark grey:#4a4a4a,dark gray:#4a4a4a,heather grey:#b6b6b6,melange:#b9b4ab,charcoal:#36454f,charcoal grey:#36454f,steel grey:#71797e,slate:#5f6a72,silver:#c0c0c0'
+      assign sw_pairs = sw_builtin | split: ','
+      for pair in sw_pairs
+        assign kv = pair | split: ':'
+        if kv[0] == sw_name
+          assign sw_hit = kv[1]
+          break
+        endif
+      endfor
+    endif
+
+    # 5. CSS colour keyword as a last resort.
+    if sw_hit == blank
+      assign sw_hit = sw_name | replace: ' ', ''
+    endif
+
+    assign sw_style = 'background: ' | append: sw_hit | append: ';'
+  endif
+-%}
+{{- sw_style -}}
