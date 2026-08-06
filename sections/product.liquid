@@ -409,11 +409,44 @@
   </div>
 </div>
 
+{%- comment -%}
+  ===== REVIEWS + APP BLOCKS =====
+  Rendered full width below the product rather than inside the info column,
+  which is where review widgets expect to sit. Owns the #reviews anchor when
+  present, so the rating link at the top of the page lands on the reviews.
+{%- endcomment -%}
+{%- assign has_app_block = false -%}
+{%- for block in section.blocks -%}
+  {%- if block.type == '@app' -%}
+    {%- assign has_app_block = true -%}
+    {%- break -%}
+  {%- endif -%}
+{%- endfor -%}
+{%- assign show_reviews = section.settings.show_judgeme_reviews -%}
+
+{%- if has_app_block or show_reviews -%}
+  <div class="pdp-apps" id="reviews">
+    {%- if show_reviews -%}
+      <div class="pdp-app pdp-app--reviews">
+        {%- render 'judgeme-review-widget', product: product -%}
+      </div>
+    {%- endif -%}
+
+    {%- for block in section.blocks -%}
+      {%- if block.type == '@app' -%}
+        <div class="pdp-app" {{ block.shopify_attributes }}>
+          {%- render block -%}
+        </div>
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
+{%- endif -%}
+
 {%- comment -%} ===== RELATED PRODUCTS ===== {%- endcomment -%}
 {%- if section.settings.show_related -%}
   {%- assign related_collection = product.collections.first -%}
   {%- if related_collection and related_collection.products.size > 1 -%}
-    <section class="related" id="reviews">
+    <section class="related"{% unless has_app_block or show_reviews %} id="reviews"{% endunless %}>
       <h2>{{ section.settings.related_heading }}</h2>
       <div class="rgrid">
         {%- assign shown = 0 -%}
@@ -1491,6 +1524,22 @@
     padding-left: 1.1rem;
   }
 
+  /* ===== APP BLOCKS ===== */
+  .pdp-apps {
+    max-width: var(--page-width);
+    margin: 0 auto;
+    padding: 0 var(--page-margin) 3rem;
+  }
+
+  .pdp-app + .pdp-app {
+    margin-top: 2.5rem;
+  }
+
+  /* Judge.me renders into this container; keep its type in the theme's face. */
+  .pdp-app--reviews {
+    font-family: var(--font-body);
+  }
+
   /* ===== RELATED ===== */
   .related {
     max-width: var(--page-width);
@@ -1635,6 +1684,13 @@
     },
     {
       "type": "checkbox",
+      "id": "show_judgeme_reviews",
+      "label": "Show Judge.me reviews",
+      "info": "Renders the Judge.me review widget below the product. Needs the Judge.me app embed switched on in Customize › App embeds. Turn this off if you place Judge.me's own app block instead, or the widget appears twice.",
+      "default": true
+    },
+    {
+      "type": "checkbox",
       "id": "show_color_group",
       "label": "Colour swatches across products",
       "info": "For catalogues that sell one product per colour. Shows a swatch per product in the group, linking to each colour's own page.",
@@ -1706,6 +1762,9 @@
     }
   ],
   "blocks": [
+    {
+      "type": "@app"
+    },
     {
       "type": "description",
       "name": "Description",
