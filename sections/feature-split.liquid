@@ -137,6 +137,30 @@
     height: auto;
   }
 
+  /**
+   * Two full-image halves sharing a row rarely have identical aspect ratios,
+   * so the row ends up as tall as the taller image and the shorter one leaves
+   * a strip of background beneath it. The wrap stretches to the row and the
+   * image grows to meet it, which trims only the few pixels of difference
+   * instead of showing a gap. Row height still comes from the natural image
+   * height, since these percentages resolve to auto while the row is measured.
+   *
+   * The media grid is what gives the wrap a definite height to measure
+   * against; if it ever failed to, the images would simply fall back to their
+   * natural height and the gap would return, rather than collapsing.
+   */
+  .split--fit-full.split--half .split__media {
+    display: grid;
+  }
+
+  .split--fit-full.split--half .split__image-wrap {
+    height: 100%;
+  }
+
+  .split--fit-full.split--half .split__image {
+    min-height: 100%;
+  }
+
   .split__image--placeholder {
     background-color: #e7e4dd;
   }
