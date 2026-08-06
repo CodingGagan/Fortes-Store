@@ -1,8 +1,34 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "contact": {
       "type": "contact",
-      "settings": {}
+      "settings": {
+        "dark_color": "#4d4631",
+        "cream_color": "#f4f1e9",
+        "accent_color": "#b8a06a",
+        "hero_kicker": "Get in Touch",
+        "hero_heading": "Contact Us",
+        "hero_intro": "We'd love to hear from you! Whether it's a query, feedback, or just your story of resilience, our doors are always open.",
+        "hero_image_asset": "feature-9006.jpg",
+        "hero_height": 100,
+        "address": "No 50, Ex-Servicemen Colony, RT Nagar, Bangalore – 560032",
+        "phone": "+91 90362 54554",
+        "email": "support@fortes.store",
+        "hours": "Monday – Saturday | 10:00 AM – 6:00 PM",
+        "form_heading": "Send us a message",
+        "form_button": "Send message",
+        "form_success": "Thanks for reaching out — we'll get back to you soon.",
+        "map_embed_url": ""
+      }
     }
   },
   "order": [
