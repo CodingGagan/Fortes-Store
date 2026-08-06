@@ -410,10 +410,8 @@
 </div>
 
 {%- comment -%}
-  ===== REVIEWS + APP BLOCKS =====
-  Rendered full width below the product rather than inside the info column,
-  which is where review widgets expect to sit. Owns the #reviews anchor when
-  present, so the rating link at the top of the page lands on the reviews.
+  Whether a reviews area exists decides where the #reviews anchor lives, so
+  this is worked out before the related products render.
 {%- endcomment -%}
 {%- assign has_app_block = false -%}
 {%- for block in section.blocks -%}
@@ -423,24 +421,6 @@
   {%- endif -%}
 {%- endfor -%}
 {%- assign show_reviews = section.settings.show_judgeme_reviews -%}
-
-{%- if has_app_block or show_reviews -%}
-  <div class="pdp-apps" id="reviews">
-    {%- if show_reviews -%}
-      <div class="pdp-app pdp-app--reviews">
-        {%- render 'judgeme-review-widget', product: product -%}
-      </div>
-    {%- endif -%}
-
-    {%- for block in section.blocks -%}
-      {%- if block.type == '@app' -%}
-        <div class="pdp-app" {{ block.shopify_attributes }}>
-          {%- render block -%}
-        </div>
-      {%- endif -%}
-    {%- endfor -%}
-  </div>
-{%- endif -%}
 
 {%- comment -%} ===== RELATED PRODUCTS ===== {%- endcomment -%}
 {%- if section.settings.show_related -%}
@@ -488,6 +468,30 @@
       </div>
     </section>
   {%- endif -%}
+{%- endif -%}
+
+{%- comment -%}
+  ===== REVIEWS + APP BLOCKS =====
+  Last thing on the page, full width rather than inside the info column, which
+  is where review widgets expect to sit. Owns the #reviews anchor when present,
+  so the rating link at the top of the page lands on the reviews.
+{%- endcomment -%}
+{%- if has_app_block or show_reviews -%}
+  <div class="pdp-apps" id="reviews">
+    {%- if show_reviews -%}
+      <div class="pdp-app pdp-app--reviews">
+        {%- render 'judgeme-review-widget', product: product -%}
+      </div>
+    {%- endif -%}
+
+    {%- for block in section.blocks -%}
+      {%- if block.type == '@app' -%}
+        <div class="pdp-app" {{ block.shopify_attributes }}>
+          {%- render block -%}
+        </div>
+      {%- endif -%}
+    {%- endfor -%}
+  </div>
 {%- endif -%}
 
 <script type="application/json" data-variants-json id="VariantsJson-{{ section.id }}">
@@ -1524,11 +1528,11 @@
     padding-left: 1.1rem;
   }
 
-  /* ===== APP BLOCKS ===== */
+  /* ===== REVIEWS + APP BLOCKS ===== */
   .pdp-apps {
     max-width: var(--page-width);
     margin: 0 auto;
-    padding: 0 var(--page-margin) 3rem;
+    padding: 0 var(--page-margin) 4rem;
   }
 
   .pdp-app + .pdp-app {
