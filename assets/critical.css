@@ -181,6 +181,15 @@ h6 {
 }
 
 /**
+ * Catalog pages sit on the studio-backdrop colour so product photography
+ * blends into the page instead of floating on white.
+ */
+body.template-collection,
+body.template-product {
+  background-color: var(--color-catalog-background, #ebedf2);
+}
+
+/**
  * Homepage section dividers.
  *
  * The full-bleed sections butt straight up against each other, so a hairline

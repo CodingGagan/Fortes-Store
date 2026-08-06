@@ -302,7 +302,9 @@
 
 {% stylesheet %}
   .collection {
-    --col-paper: #f1efe9;
+    /* Image tiles sit a shade under the page backdrop so a card still reads as
+       a card before its photo loads. */
+    --col-paper: var(--color-catalog-media, #f1efe9);
     --col-muted: #8c867c;
     --col-line: #e4e1d9;
     max-width: var(--page-width);

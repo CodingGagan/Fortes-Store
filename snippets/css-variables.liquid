@@ -25,6 +25,10 @@
     --style-border-radius-inputs: {{ settings.input_corner_radius }}px;
     --logo-width: {{ settings.logo_width | default: 160 }}px;
 
+    {% # Catalog surfaces: page backdrop, and a shade under it for image tiles %}
+    --color-catalog-background: {{ settings.catalog_background_color | default: '#EBEDF2' }};
+    --color-catalog-media: color-mix(in srgb, var(--color-catalog-background) 94%, #000);
+
     {% # Fixed header: 6px top bar + the 4.5rem tall header row %}
     --header-height: calc(4.5rem + 6px);
 

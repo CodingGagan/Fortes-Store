@@ -97,6 +97,13 @@
       },
       {
         "type": "color",
+        "id": "catalog_background_color",
+        "default": "#EBEDF2",
+        "label": "Catalog background",
+        "info": "Page background on product and collection pages. Set to the studio backdrop colour so product photos blend into the page."
+      },
+      {
+        "type": "color",
         "id": "button_background_color",
         "default": "#3f6f4e",
         "label": "Button background"
