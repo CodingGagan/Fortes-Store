@@ -19,7 +19,7 @@
   endif
 -%}
 <div
-  class="split full-width{% if section.settings.width == 'half' %} split--half{% endif %}{% if section_url != blank %} has-link{% endif %}"
+  class="split full-width{% if section.settings.width == 'half' %} split--half{% endif %}{% if section.settings.image_fit == 'full' %} split--fit-full{% endif %}{% if section_url != blank %} has-link{% endif %}"
   data-side="{{ section.settings.image_side }}"
   style="--split-height: {{ section.settings.image_height }}vh; --split-bg: {{ section_bg }}; --split-heading-color: {{ section.settings.heading_color }}; --split-btn-bg: {{ btn_bg }}; --split-btn-text: {{ btn_text }}; --split-gradient-color: {{ section.settings.gradient_color }}; --split-gradient-height: {{ section.settings.gradient_height }}%; --split-btn-offset: {{ section.settings.button_offset }}%;"
 >
@@ -118,9 +118,23 @@
   }
 
   .split__image {
+    display: block;
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  /**
+   * Full image: the wrap takes its height from the image's own aspect ratio,
+   * so nothing is cropped. Overlays stay anchored to the image because they
+   * are positioned against this same wrap.
+   */
+  .split--fit-full .split__image-wrap {
+    height: auto;
+  }
+
+  .split--fit-full .split__image {
+    height: auto;
   }
 
   .split__image--placeholder {
@@ -196,7 +210,7 @@
     .split__spacer {
       display: none;
     }
-    .split__image-wrap {
+    .split:not(.split--fit-full) .split__image-wrap {
       height: 70vh;
     }
   }
@@ -259,6 +273,18 @@
       "default": "left"
     },
     {
+      "type": "select",
+      "id": "image_fit",
+      "label": "Image fit",
+      "info": "Full image sizes the section from the image itself, so nothing is cut off. Crop to height fills a fixed height and trims the edges.",
+      "options": [
+        { "value": "cover", "label": "Crop to height" },
+        { "value": "full", "label": "Full image (no crop)" }
+      ],
+      "default": "cover"
+    },
+    {
+      "visible_if": "{{ section.settings.image_fit == 'cover' }}",
       "type": "range",
       "id": "image_height",
       "min": 50,

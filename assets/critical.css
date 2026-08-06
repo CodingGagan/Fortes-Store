@@ -179,3 +179,32 @@ h6 {
 .shopify-section > .full-width {
   grid-column: 1 / -1;
 }
+
+/**
+ * Homepage section dividers.
+ *
+ * The full-bleed sections butt straight up against each other, so a hairline
+ * of page background is drawn between them to keep the seams readable. The
+ * first section after the header is skipped so no line appears under the
+ * floating header bar.
+ */
+body.template-index {
+  --section-divider: 3px;
+  --section-divider-color: #ffffff;
+}
+
+body.template-index > .shopify-section + .shopify-section:not(#shopify-section-cart-drawer) {
+  border-top: var(--section-divider) solid var(--section-divider-color);
+}
+
+/* Vertical seam between two half sections sharing a row. */
+body.template-index > .shopify-section:has(> .split--half) + .shopify-section:has(> .split--half) {
+  border-left: var(--section-divider) solid var(--section-divider-color);
+}
+
+/* Half sections stack on mobile, so the seam between them is horizontal again. */
+@media (max-width: 749px) {
+  body.template-index > .shopify-section:has(> .split--half) + .shopify-section:has(> .split--half) {
+    border-left: 0;
+  }
+}

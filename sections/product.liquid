@@ -85,11 +85,15 @@
                 endif
               endif
             -%}
+            {%- capture thumb_srcset -%}
+              {{ media.preview_image | image_url: width: 600 }} 600w, {{ media.preview_image | image_url: width: 900 }} 900w, {{ media.preview_image | image_url: width: 1200 }} 1200w, {{ media.preview_image | image_url: width: 1400 }} 1400w
+            {%- endcapture -%}
             <button
               type="button"
               class="gallery__thumb{% if forloop.first %} is-on{% endif %}"
               data-media-id="{{ media.id }}"
-              data-src="{{ media.preview_image | image_url: width: 1200 }}"
+              data-src="{{ media.preview_image | image_url: width: 1400 }}"
+              data-srcset="{{ thumb_srcset | strip | escape }}"
               {% if media_color != blank %}data-color="{{ media_color | downcase | escape }}"{% endif %}
               aria-label="View image {{ forloop.index }}"
             >
@@ -103,7 +107,7 @@
         </div>
       {%- endif -%}
 
-      <div class="gallery__main">
+      <div class="gallery__main" data-current-media="{{ product.featured_media.id }}">
         {%- if on_sale -%}
           {%- assign save_pct = current_variant.compare_at_price | minus: current_variant.price | times: 100.0 | divided_by: current_variant.compare_at_price | round -%}
           <span class="gallery__tag" data-save-tag>Save {{ save_pct }}%</span>
@@ -123,6 +127,12 @@
         {%- else -%}
           {{ 'product-1' | placeholder_svg_tag: 'gallery__img gallery__img--placeholder' }}
         {%- endif -%}
+
+        {%- comment -%}
+          Shown only while a swap is genuinely waiting on the network — a
+          cached image is applied synchronously and never reaches this.
+        {%- endcomment -%}
+        <span class="gallery__loading" data-gallery-loading hidden aria-hidden="true"></span>
       </div>
     </div>
 
@@ -599,10 +609,79 @@
       }
     }
 
+    // ===== Main image swapping =====
+    // The gallery used to assign mainImg.src straight from the click, which
+    // left the old photo on screen — with no feedback — for as long as the new
+    // one took to arrive. Instead every candidate is pulled into the browser
+    // cache ahead of time, and a swap only paints once the new image has
+    // decoded. Cached images (the normal case after warm-up) swap in the same
+    // frame as the click; only a genuine network wait shows the spinner.
+    var mainSizes = mainImg ? mainImg.getAttribute('sizes') : null;
+    var mainWrap = root.querySelector('.gallery__main');
+    var loadingEl = root.querySelector('[data-gallery-loading]');
+    var swapToken = 0;
+    var warmed = Object.create(null);
+
+    function warmImage(src, srcset) {
+      if (!src) return null;
+      if (warmed[src]) return warmed[src];
+      var img = new Image();
+      if (mainSizes) img.sizes = mainSizes;
+      if (srcset) img.srcset = srcset;
+      img.src = src;
+      // Held in the map so the fetch isn't cut short by garbage collection.
+      warmed[src] = img;
+      return img;
+    }
+
+    function setLoading(on) {
+      if (loadingEl) loadingEl.hidden = !on;
+    }
+
+    function showMainImage(src, srcset) {
+      if (!mainImg || !src) return;
+      var token = ++swapToken;
+      var pre = warmImage(src, srcset);
+
+      function apply() {
+        // A newer click already won the race — leave its image alone.
+        if (token !== swapToken) return;
+        if (srcset) {
+          mainImg.srcset = srcset;
+        } else {
+          mainImg.removeAttribute('srcset');
+        }
+        mainImg.src = src;
+        setLoading(false);
+      }
+
+      if (pre.complete && pre.naturalWidth) {
+        apply();
+        return;
+      }
+      setLoading(true);
+      if (pre.decode) {
+        pre.decode().then(apply, apply);
+      } else {
+        pre.addEventListener('load', apply);
+        pre.addEventListener('error', apply);
+      }
+    }
+
+    // True when the requested media is already the one on screen — swapping it
+    // would only throw away the server-rendered responsive image and refetch.
+    function isCurrentMedia(mediaId) {
+      return !!mediaId && !!mainWrap && mainWrap.dataset.currentMedia === String(mediaId);
+    }
+
+    function markCurrentMedia(mediaId) {
+      if (mainWrap && mediaId) mainWrap.dataset.currentMedia = String(mediaId);
+    }
+
     function setMainImage(src, mediaId) {
-      if (!mainImg) return;
-      mainImg.src = src;
-      mainImg.removeAttribute('srcset');
+      if (!mainImg || isCurrentMedia(mediaId)) return;
+      showMainImage(src, null);
+      markCurrentMedia(mediaId);
       root.querySelectorAll('.gallery__thumb').forEach(function (t) {
         t.classList.toggle('is-on', mediaId && +t.dataset.mediaId === +mediaId);
       });
@@ -623,10 +702,18 @@
       if (!thumb) return;
       root.querySelectorAll('.gallery__thumb').forEach(function (t) { t.classList.remove('is-on'); });
       thumb.classList.add('is-on');
-      if (mainImg && thumb.dataset.src) {
-        mainImg.src = thumb.dataset.src;
-        mainImg.removeAttribute('srcset');
+      if (isCurrentMedia(thumb.dataset.mediaId)) return;
+      showMainImage(thumb.dataset.src, thumb.dataset.srcset);
+      markCurrentMedia(thumb.dataset.mediaId);
+    }
+
+    // First thumbnail tagged with a colour — what a swatch click lands on.
+    function firstThumbForColor(color) {
+      var thumbs = root.querySelectorAll('.gallery__thumb');
+      for (var i = 0; i < thumbs.length; i++) {
+        if ((thumbs[i].dataset.color || '') === color) return thumbs[i];
       }
+      return null;
     }
 
     // Show only the thumbnails belonging to the given colour (plus any untagged
@@ -668,7 +755,52 @@
     // Thumbnail rail.
     root.querySelectorAll('.gallery__thumb').forEach(function (thumb) {
       thumb.addEventListener('click', function () { activateThumb(thumb); });
+      // Pointing at a thumb is a strong signal it's about to be clicked.
+      thumb.addEventListener('pointerenter', function () {
+        warmImage(thumb.dataset.src, thumb.dataset.srcset);
+      });
     });
+
+    // Hovering a swatch starts its image before the click lands, so by the time
+    // the shopper commits the swap is usually already in cache.
+    if (colorOptionEl) {
+      colorOptionEl.querySelectorAll('.swatch').forEach(function (label) {
+        label.addEventListener('pointerenter', function () {
+          var input = label.querySelector('input');
+          if (!input) return;
+          var thumb = firstThumbForColor(input.value.toLowerCase());
+          if (thumb) warmImage(thumb.dataset.src, thumb.dataset.srcset);
+        });
+      });
+    }
+
+    // Background warm-up once the page is idle: the opening shot of every
+    // colour first (that's what swatch clicks hit), then the remaining images.
+    // Capped so a product with a long gallery doesn't pull the whole set.
+    function warmGallery() {
+      var thumbs = Array.prototype.slice.call(root.querySelectorAll('.gallery__thumb'));
+      var seen = Object.create(null);
+      var lead = [];
+      var rest = [];
+      thumbs.forEach(function (t) {
+        var c = t.dataset.color || '';
+        if (c && !seen[c]) {
+          seen[c] = true;
+          lead.push(t);
+        } else {
+          rest.push(t);
+        }
+      });
+      lead.concat(rest).slice(0, 12).forEach(function (t) {
+        warmImage(t.dataset.src, t.dataset.srcset);
+      });
+    }
+
+    if (window.requestIdleCallback) {
+      requestIdleCallback(warmGallery, { timeout: 3000 });
+    } else {
+      setTimeout(warmGallery, 600);
+    }
 
     // Filter to the initially-selected colour on load.
     lastColor = selectedColor();
@@ -794,6 +926,57 @@
 
   .gallery__main:hover .gallery__img {
     transform: scale(1.08);
+  }
+
+  /**
+   * Swap spinner. The fade-in is delayed so a swap that resolves quickly
+   * finishes before the spinner is ever visible — no flicker on fast swaps,
+   * clear feedback on slow ones.
+   */
+  .gallery__loading {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    background: rgba(233, 230, 223, 0.55);
+    pointer-events: none;
+    animation: gallery-loading-in 0.15s ease 0.15s both;
+  }
+
+  .gallery__loading[hidden] {
+    display: none;
+  }
+
+  .gallery__loading::after {
+    content: '';
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.18);
+    border-top-color: var(--col-ink, #1c1c1c);
+    animation: gallery-loading-spin 0.7s linear infinite;
+  }
+
+  @keyframes gallery-loading-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes gallery-loading-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gallery__loading::after {
+      animation-duration: 2.4s;
+    }
   }
 
   .gallery__tag {

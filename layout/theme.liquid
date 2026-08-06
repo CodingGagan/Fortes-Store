@@ -52,7 +52,7 @@
     {{ content_for_header }}
   </head>
 
-  <body>
+  <body class="template-{{ request.page_type }}">
     {% sections 'header-group' %}
 
     {{ content_for_layout }}
