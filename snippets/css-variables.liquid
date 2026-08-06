@@ -23,6 +23,7 @@
     --color-button-background: {{ settings.button_background_color }};
     --color-button-text: {{ settings.button_text_color }};
     --style-border-radius-inputs: {{ settings.input_corner_radius }}px;
+    --logo-width: {{ settings.logo_width | default: 160 }}px;
 
     {% # Fixed header: 6px top bar + the 4.5rem tall header row %}
     --header-height: calc(4.5rem + 6px);

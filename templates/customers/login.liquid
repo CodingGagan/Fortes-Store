@@ -1,4 +1,24 @@
 <div class="customer">
+  {%- comment -%}
+    Branding above the form. Falls back to the shop name as a wordmark when no
+    logo is set in Theme settings › Brand, so the page is never unbranded.
+  {%- endcomment -%}
+  <a href="{{ routes.root_url }}" class="customer__logo" aria-label="{{ shop.name | escape }}">
+    {%- if settings.logo != blank -%}
+      {{
+        settings.logo
+        | image_url: width: 640
+        | image_tag:
+          widths: '160, 320, 480, 640',
+          sizes: '(max-width: 480px) 50vw, 320px',
+          class: 'customer__logo-image',
+          alt: shop.name
+      }}
+    {%- else -%}
+      <span class="customer__wordmark">{{ shop.name }}</span>
+    {%- endif -%}
+  </a>
+
   {%- comment -%} ---------- Recover password (shown via #recover) ---------- {%- endcomment -%}
   <div id="recover" class="customer__block">
     <h1 class="customer__title">Reset your password</h1>

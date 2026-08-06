@@ -60,6 +60,27 @@
     ]
   },
   {
+    "name": "Brand",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Logo",
+        "info": "Used on the login and account pages and on gift cards. The header keeps its own logo setting."
+      },
+      {
+        "type": "range",
+        "id": "logo_width",
+        "min": 80,
+        "max": 320,
+        "step": 10,
+        "unit": "px",
+        "label": "Logo width",
+        "default": 160
+      }
+    ]
+  },
+  {
     "name": "t:general.colors",
     "settings": [
       {

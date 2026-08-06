@@ -19,6 +19,30 @@
   width: 100%;
 }
 
+/* ---------- Logo ---------- */
+.customer__logo {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 2rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.customer__logo-image {
+  display: block;
+  width: var(--logo-width, 160px);
+  max-width: 100%;
+  height: auto;
+}
+
+.customer__wordmark {
+  font-family: var(--font-heading--family, serif);
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .customer__title {
   margin: 0 0 0.5rem;
   text-align: center;
