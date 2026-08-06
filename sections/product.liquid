@@ -176,6 +176,28 @@
         <input type="hidden" name="id" value="{{ current_variant.id }}" data-variant-id>
 
         {%- comment -%} ===== VARIANT PICKERS ===== {%- endcomment -%}
+
+        {%- comment -%}
+          Colours are sold as separate products here, so the colour row comes
+          from the product group rather than from variants. Captured first so
+          the loop below knows whether a single-value colour picker would be a
+          duplicate.
+        {%- endcomment -%}
+        {%- capture color_group_html -%}
+          {%- if section.settings.show_color_group -%}
+            {%- render 'color-group-swatches',
+              product: product,
+              group_prefix: section.settings.color_group_prefix,
+              swatch_map: section.settings.color_swatch_map
+            -%}
+          {%- endif -%}
+        {%- endcapture -%}
+        {%- assign has_color_group = false -%}
+        {%- if color_group_html contains 'data-color-group' -%}
+          {%- assign has_color_group = true -%}
+        {%- endif -%}
+        {{ color_group_html }}
+
         {%- unless product.has_only_default_variant -%}
           {%- for option in product.options_with_values -%}
             {%- assign opt_name_dc = option.name | downcase -%}
@@ -184,7 +206,23 @@
               {%- assign is_color = true -%}
             {%- endif -%}
 
-            <div class="opt" data-option-index="{{ option.position }}"{% if is_color %} data-color-option{% endif %}>
+            {%- comment -%}
+              A one-colour product inside a group already has its colour shown
+              by the group row above, so that picker is hidden rather than
+              dropped — the script still reads its checked input to resolve the
+              variant.
+            {%- endcomment -%}
+            {%- assign hide_option = false -%}
+            {%- if is_color and has_color_group and option.values.size == 1 -%}
+              {%- assign hide_option = true -%}
+            {%- endif -%}
+
+            <div
+              class="opt"
+              data-option-index="{{ option.position }}"
+              {% if is_color %}data-color-option{% endif %}
+              {% if hide_option %}hidden{% endif %}
+            >
               <div class="opt__label">
                 {{ option.name }}
                 {%- if is_color %}: <span data-option-selected="{{ option.position }}">{{ option.selected_value }}</span>{% endif -%}
@@ -1071,6 +1109,10 @@
     margin-bottom: 1.5rem;
   }
 
+  .opt[hidden] {
+    display: none;
+  }
+
   .opt__label {
     font-size: 0.82rem;
     font-weight: 600;
@@ -1122,6 +1164,17 @@
 
   .swatch.is-on {
     outline: 2px solid var(--col-ink, #1c1c1c);
+    outline-offset: 3px;
+  }
+
+  /* Group swatches are links to the sibling colour's product page. */
+  a.swatch {
+    display: block;
+    text-decoration: none;
+  }
+
+  a.swatch:hover {
+    outline: 1px solid var(--col-line, #e4e1d9);
     outline-offset: 3px;
   }
 
@@ -1579,6 +1632,21 @@
       "label": "Colour option name",
       "info": "Which product option renders as colour swatches.",
       "default": "Color"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_color_group",
+      "label": "Colour swatches across products",
+      "info": "For catalogues that sell one product per colour. Shows a swatch per product in the group, linking to each colour's own page.",
+      "default": true
+    },
+    {
+      "visible_if": "{{ section.settings.show_color_group }}",
+      "type": "text",
+      "id": "color_group_prefix",
+      "label": "Colour group tag prefix",
+      "info": "Tag every colour of a style alike, e.g. “color-group:bamboo-cotton-tee”. Grouping looks inside the collections a product belongs to. A custom.color_siblings product-reference metafield takes priority when set.",
+      "default": "color-group:"
     },
     {
       "type": "textarea",

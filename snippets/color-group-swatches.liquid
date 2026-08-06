@@ -1,0 +1,155 @@
+{% comment %}
+  Colour swatches across sibling *products*.
+
+  The shop sells one product per colour — each colour is its own listing with
+  its own images and SKUs — so the colours a shopper switches between are
+  separate products, not variants. This renders one swatch per product in the
+  group: the product being viewed is marked selected, the rest link to their
+  own page.
+
+  Accepts:
+    · product      – the product being viewed
+    · group_prefix – tag prefix marking the group (default "color-group:").
+                     Tag every colour of a style alike, e.g.
+                     "color-group:bamboo-cotton-tee".
+    · swatch_map   – optional "name: colour" lines, passed to the fill resolver
+
+  How the group is found, in order:
+    1. the custom.color_siblings metafield (product-reference list) — exact,
+       and the only option if the colours don't share a collection
+    2. products carrying the same group tag inside this product's collections
+
+  How each swatch's colour name is resolved, in order:
+    1. custom.colour_name metafield
+    2. the text in brackets in the title — "Bamboo Tee ( Wine )" → "Wine"
+    3. the product's own first colour option value
+
+  Members are sorted by handle so the row reads in the same order on every
+  product in the group. Renders nothing unless the group has two-plus members.
+{% endcomment %}
+
+{%- liquid
+  assign cg_prefix = group_prefix | default: 'color-group:'
+  assign cg_handles = ''
+
+  # 1. Explicit sibling list.
+  assign cg_linked = product.metafields.custom.color_siblings.value
+  if cg_linked != blank
+    for p in cg_linked
+      assign cg_handles = cg_handles | append: p.handle | append: ','
+    endfor
+  endif
+
+  # 2. Tag-based grouping over the collections this product sits in.
+  if cg_handles == blank
+    assign cg_key = ''
+    for tag in product.tags
+      assign tag_dc = tag | downcase | strip
+      if tag_dc contains cg_prefix
+        assign cg_key = tag_dc
+        break
+      endif
+    endfor
+
+    if cg_key != blank
+      for coll in product.collections limit: 3
+        for p in coll.products limit: 50
+          assign p_in_group = false
+          for tag in p.tags
+            assign tag_dc = tag | downcase | strip
+            if tag_dc == cg_key
+              assign p_in_group = true
+              break
+            endif
+          endfor
+          if p_in_group
+            assign probe = p.handle | prepend: ',' | append: ','
+            assign seen = cg_handles | prepend: ','
+            unless seen contains probe
+              assign cg_handles = cg_handles | append: p.handle | append: ','
+            endunless
+          endif
+        endfor
+      endfor
+    endif
+  endif
+
+  # The product being viewed is always part of its own group, however the
+  # group was built (an explicit sibling list often names only the others).
+  assign self_probe = product.handle | prepend: ',' | append: ','
+  assign seen = cg_handles | prepend: ','
+  unless cg_handles == blank or seen contains self_probe
+    assign cg_handles = cg_handles | append: product.handle | append: ','
+  endunless
+
+  assign cg_members = cg_handles | split: ',' | sort
+
+  # Colour name of the product being viewed, for the label.
+  assign cg_current = product.metafields.custom.colour_name
+  if cg_current == blank
+    assign cg_title_parts = product.title | split: '('
+    if cg_title_parts.size > 1
+      assign cg_current = cg_title_parts.last | split: ')' | first | strip
+    endif
+  endif
+-%}
+
+{%- if cg_members.size > 1 -%}
+  <div class="opt" data-color-group>
+    <div class="opt__label">
+      Color{% if cg_current != blank %}: <span>{{ cg_current }}</span>{% endif %}
+    </div>
+
+    <div class="swatches">
+      {%- comment -%}
+        Capped at 10: all_products lookups are limited per page, and a colour
+        group that long wants a different UI anyway.
+      {%- endcomment -%}
+      {%- for handle in cg_members limit: 10 -%}
+        {%- liquid
+          assign cg_item = all_products[handle]
+          if cg_item == empty
+            continue
+          endif
+
+          assign cg_name = cg_item.metafields.custom.colour_name
+          if cg_name == blank
+            assign cg_parts = cg_item.title | split: '('
+            if cg_parts.size > 1
+              assign cg_name = cg_parts.last | split: ')' | first | strip
+            endif
+          endif
+          if cg_name == blank
+            for option in cg_item.options_with_values
+              assign o_dc = option.name | downcase
+              if o_dc contains 'color' or o_dc contains 'colour'
+                assign cg_name = option.values.first
+                break
+              endif
+            endfor
+          endif
+          assign cg_name = cg_name | default: cg_item.title
+        -%}
+        {%- if handle == product.handle -%}
+          <span
+            class="swatch is-on"
+            title="{{ cg_name | escape }}"
+            aria-current="true"
+            style="{% render 'swatch-style', swatch_value: cg_name, swatch_map: swatch_map %}"
+          >
+            <span class="visually-hidden">{{ cg_name }} (selected)</span>
+          </span>
+        {%- else -%}
+          <a
+            class="swatch"
+            href="{{ cg_item.url }}"
+            title="{{ cg_name | escape }}"
+            style="{% render 'swatch-style', swatch_value: cg_name, swatch_map: swatch_map %}"
+          >
+            <span class="visually-hidden">{{ cg_name }}</span>
+          </a>
+        {%- endif -%}
+      {%- endfor -%}
+    </div>
+  </div>
+{%- endif -%}
