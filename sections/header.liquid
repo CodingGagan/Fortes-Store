@@ -123,37 +123,43 @@
   <div class="site-search__overlay" data-search-close></div>
 
   <div class="site-search__panel" role="dialog" aria-modal="true" aria-label="Search">
-    <form
-      class="site-search__form"
-      action="{{ routes.search_url }}"
-      method="get"
-      role="search"
-      data-search-form
-    >
-      <span class="site-search__icon" aria-hidden="true">
-        {{ 'icon-search.svg' | inline_asset_content }}
-      </span>
-
-      <input
-        type="search"
-        name="q"
-        class="site-search__input"
-        placeholder="Search products, collections, pages…"
-        autocomplete="off"
-        autocorrect="off"
-        spellcheck="false"
-        aria-label="Search"
-        data-search-input
+    {%- comment -%}
+      The close button sits beside the field rather than inside it, so the
+      field itself can be a self-contained pill.
+    {%- endcomment -%}
+    <div class="site-search__bar">
+      <form
+        class="site-search__form"
+        action="{{ routes.search_url }}"
+        method="get"
+        role="search"
+        data-search-form
       >
+        <span class="site-search__icon" aria-hidden="true">
+          {{ 'icon-search.svg' | inline_asset_content }}
+        </span>
 
-      <button type="submit" class="site-search__submit">Search</button>
+        <input
+          type="search"
+          name="q"
+          class="site-search__input"
+          placeholder="Search products, collections, pages…"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+          aria-label="Search"
+          data-search-input
+        >
+
+        <button type="submit" class="site-search__submit">Search</button>
+      </form>
 
       <button type="button" class="site-search__close" data-search-close aria-label="Close search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true">
           <path d="M6 6l12 12M18 6L6 18" />
         </svg>
       </button>
-    </form>
+    </div>
 
     <div class="site-search__results" data-search-results aria-live="polite"></div>
   </div>
@@ -325,15 +331,29 @@
     transform: translateY(0);
   }
 
+  /* Holds the field centred on the page with the ✕ pinned to the right. */
+  .site-search__bar {
+    position: relative;
+    width: 100%;
+    max-width: var(--page-width);
+    margin: 0 auto;
+  }
+
   .site-search__form {
     display: flex;
     align-items: center;
-    gap: 0.7rem;
-    max-width: var(--page-width);
+    gap: 0.6rem;
     width: 100%;
+    max-width: 620px;
     margin: 0 auto;
-    border-bottom: 1px solid var(--color-foreground);
-    padding-bottom: 0.55rem;
+    background: var(--color-background, #fff);
+    border: 1px solid rgba(0, 0, 0, 0.18);
+    border-radius: 999px;
+    padding: 0.3rem 0.3rem 0.3rem 1rem;
+  }
+
+  .site-search__form:focus-within {
+    border-color: var(--color-foreground);
   }
 
   .site-search__icon {
@@ -390,7 +410,10 @@
   }
 
   .site-search__close {
-    flex: 0 0 auto;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
     border: 0;
     background: none;
     color: var(--color-foreground);
@@ -404,8 +427,9 @@
     height: auto;
   }
 
+  /* Aligned to the field so the suggestions read as one unit with it. */
   .site-search__results {
-    max-width: var(--page-width);
+    max-width: 620px;
     width: 100%;
     margin: 0 auto;
     overflow-y: auto;
@@ -420,6 +444,26 @@
   .site-search.is-loading .site-search__results {
     opacity: 0.45;
     transition: opacity 0.15s ease;
+  }
+
+  /* Narrow screens: the field uses the full width, so the ✕ takes its own
+     space in the row instead of overlapping the submit button. */
+  @media (max-width: 749px) {
+    .site-search__bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .site-search__close {
+      position: static;
+      transform: none;
+      flex: 0 0 auto;
+    }
+
+    .site-search__submit {
+      padding: 0.5rem 0.9rem;
+    }
   }
 
   /* ===== PREDICTIVE RESULTS (markup from sections/predictive-search.liquid) ===== */
