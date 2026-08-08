@@ -9,6 +9,7 @@
  */
 {
   "current": {
+    "whatsapp_floating": true,
     "sections": {
       "cart-drawer": {
         "type": "cart-drawer",
