@@ -44,6 +44,18 @@
               <li><a href="{{ pages['about-us'].url | default: '/pages/about-us' }}">About Us</a></li>
               <li><a href="{{ pages['contact-us'].url | default: '/pages/contact-us' }}">Contact</a></li>
             {% endif %}
+
+            {% comment %}
+              Support address on the first column, so it's reachable from every
+              page without hunting for the contact page.
+            {% endcomment %}
+            {% if forloop.first and settings.support_email != blank %}
+              <li>
+                <a href="mailto:{{ settings.support_email }}" class="footer__email">
+                  {{ settings.support_email }}
+                </a>
+              </li>
+            {% endif %}
           </ul>
         </div>
       {% endfor %}
@@ -197,6 +209,12 @@
 
   .footer__menu-list a:hover {
     opacity: 0.55;
+  }
+
+  /* An address is longer than a nav label — let it wrap rather than overflow. */
+  .footer__email {
+    font-size: 1rem;
+    overflow-wrap: anywhere;
   }
 
   /* Sign-in pill sits under the menu columns. */

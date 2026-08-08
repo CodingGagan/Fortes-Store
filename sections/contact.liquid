@@ -70,13 +70,14 @@
           </div>
         {% endif %}
 
-        {% if section.settings.email != blank %}
+        {%- assign contact_email = section.settings.email | default: settings.support_email -%}
+        {% if contact_email != blank %}
           <div class="contact-info__item">
             <span class="contact-info__icon" aria-hidden="true">📧</span>
             <div>
               <h2 class="contact-info__label">Email Us</h2>
               <p class="contact-info__value">
-                <a href="mailto:{{ section.settings.email }}">{{ section.settings.email }}</a>
+                <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
               </p>
             </div>
           </div>
@@ -478,6 +479,7 @@
       "type": "text",
       "id": "email",
       "label": "Email",
+      "info": "Leave blank to use the support email from Theme settings › Brand.",
       "default": "support@fortes.store"
     },
     {

@@ -69,6 +69,13 @@
         "info": "Used on the login and account pages and on gift cards. The header keeps its own logo setting."
       },
       {
+        "type": "text",
+        "id": "support_email",
+        "label": "Support email",
+        "info": "The official contact address. Used by the footer, the contact page and the privacy, terms and return policies. Falls back to the store email if left blank.",
+        "default": "support@fortes.store"
+      },
+      {
         "type": "range",
         "id": "logo_width",
         "min": 80,

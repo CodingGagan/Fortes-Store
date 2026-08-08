@@ -14,7 +14,12 @@
   if biz_name == blank
     assign biz_name = shop.name
   endif
+  # Per-page override first, then the theme-wide support address, then the
+  # store's own email as a last resort.
   assign contact_email = section.settings.contact_email
+  if contact_email == blank
+    assign contact_email = settings.support_email
+  endif
   if contact_email == blank
     assign contact_email = shop.email
   endif
@@ -168,7 +173,7 @@
       "type": "text",
       "id": "contact_email",
       "label": "Contact email",
-      "info": "Leave blank to use the store email."
+      "info": "Leave blank to use the support email from Theme settings › Brand."
     },
     {
       "type": "text",
