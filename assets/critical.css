@@ -181,6 +181,62 @@ h6 {
 }
 
 /**
+ * WhatsApp chat link. Inline sits in page content; floating is a fixed bubble
+ * kept under the drawers and the collection filter panel so it can never
+ * cover them.
+ */
+.wa-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #128c4b;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.wa-link:hover {
+  opacity: 0.8;
+}
+
+.wa-link__icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex: 0 0 auto;
+}
+
+.wa-link--floating {
+  position: fixed;
+  right: clamp(1rem, 3vw, 1.75rem);
+  bottom: clamp(1rem, 3vw, 1.75rem);
+  z-index: 90;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  justify-content: center;
+  gap: 0;
+  background: #25d366;
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease;
+}
+
+.wa-link--floating:hover {
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+.wa-link--floating .wa-link__icon {
+  width: 28px;
+  height: 28px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wa-link--floating {
+    transition: none;
+  }
+}
+
+/**
  * Catalog pages sit on the studio-backdrop colour so product photography
  * blends into the page instead of floating on white.
  */

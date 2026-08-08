@@ -61,6 +61,10 @@
 
     {% section 'cart-drawer' %}
 
+    {% if settings.whatsapp_floating %}
+      {% render 'whatsapp-button', style: 'floating', label: 'Chat with us on WhatsApp' %}
+    {% endif %}
+
     <script src="{{ 'cart.js' | asset_url }}" defer></script>
     <script src="{{ 'collection.js' | asset_url }}" defer></script>
     <script src="{{ 'header.js' | asset_url }}" defer></script>

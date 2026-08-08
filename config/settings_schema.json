@@ -76,6 +76,27 @@
         "default": "support@fortes.store"
       },
       {
+        "type": "text",
+        "id": "whatsapp_number",
+        "label": "WhatsApp number",
+        "info": "Country code first, digits only — e.g. 919036254554 for +91 90362 54554. Must be a number with WhatsApp active on it. Leave blank to hide the WhatsApp buttons.",
+        "default": "919036254554"
+      },
+      {
+        "type": "text",
+        "id": "whatsapp_message",
+        "label": "WhatsApp pre-filled message",
+        "info": "Pre-typed in the customer's message box; they can edit it before sending.",
+        "default": "Hi Fortes Store, I have a question about"
+      },
+      {
+        "type": "checkbox",
+        "id": "whatsapp_floating",
+        "label": "Floating WhatsApp button on every page",
+        "info": "Shows a chat bubble in the bottom corner site-wide. The contact page button shows either way.",
+        "default": false
+      },
+      {
         "type": "range",
         "id": "logo_width",
         "min": 80,

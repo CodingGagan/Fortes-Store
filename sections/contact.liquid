@@ -92,6 +92,18 @@
             </div>
           </div>
         {% endif %}
+
+        {% if settings.whatsapp_number != blank %}
+          <div class="contact-info__item">
+            <span class="contact-info__icon" aria-hidden="true">💬</span>
+            <div>
+              <h2 class="contact-info__label">Message Us</h2>
+              <p class="contact-info__value">
+                {% render 'whatsapp-button', style: 'inline', label: 'Chat on WhatsApp' %}
+              </p>
+            </div>
+          </div>
+        {% endif %}
       </div>
 
       {%- comment -%} Contact form {%- endcomment -%}
