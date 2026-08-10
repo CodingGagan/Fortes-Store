@@ -74,7 +74,8 @@
 
 {% stylesheet %}
   .clist {
-    --col-paper: #f1efe9;
+    /* Image tiles sit a shade under the page backdrop — see .collection. */
+    --col-paper: var(--color-catalog-media, #f1efe9);
     --col-muted: #8c867c;
     --col-line: #e4e1d9;
     max-width: var(--page-width);
